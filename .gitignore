@@ -1,0 +1,67 @@
+# ===== Maven =====
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# ===== IntelliJ IDEA =====
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# ===== Eclipse =====
+.project
+.classpath
+.settings/
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+
+# ===== NetBeans =====
+nb-configuration.xml
+nbactions.xml
+nbproject/private/
+build/
+dist/
+nbbuild/
+nbdist/
+.nb-gradle/
+
+# ===== VS Code =====
+.vscode/
+
+# ===== macOS =====
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ===== Linux / Windows =====
+*~
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ===== Logs & temp =====
+*.log
+*.log.*
+logs/
+hs_err_pid*
+
+# ===== Local config / secrets =====
+# Toujours indiquer les vraies valeurs en local, jamais dans le repo
+*.local.properties
+.env
+.env.local
