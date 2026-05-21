@@ -1,5 +1,6 @@
 package sn.association.cotisations.servlet;
 
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -12,7 +13,7 @@ import java.io.IOException;
 @WebServlet(name = "RapportsServlet", urlPatterns = {"/admin/rapports"})
 public class RapportsServlet extends HttpServlet {
 
-    private final RapportService rapportService = new RapportService();
+    @Inject RapportService rapportService;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)

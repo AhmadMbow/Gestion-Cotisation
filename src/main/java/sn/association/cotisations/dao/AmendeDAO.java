@@ -1,5 +1,6 @@
 package sn.association.cotisations.dao;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import sn.association.cotisations.entity.Amende;
 import sn.association.cotisations.entity.StatutAmende;
@@ -11,6 +12,7 @@ import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
 
+@ApplicationScoped
 public class AmendeDAO {
 
     public List<Amende> findAll() {

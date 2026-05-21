@@ -1,5 +1,6 @@
 package sn.association.cotisations.servlet;
 
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -17,7 +18,7 @@ import java.io.IOException;
 @WebServlet(name = "AdminRappelsServlet", urlPatterns = {"/admin/rappels"})
 public class AdminRappelsServlet extends HttpServlet {
 
-    private final RappelService rappelService = new RappelService();
+    @Inject RappelService rappelService;
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)

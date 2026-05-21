@@ -1,5 +1,6 @@
 package sn.association.cotisations.servlet;
 
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -31,8 +32,8 @@ import java.math.BigDecimal;
 })
 public class AdminAmendesServlet extends HttpServlet {
 
-    private final AmendeService amendeService = new AmendeService();
-    private final MembreService membreService = new MembreService();
+    @Inject AmendeService amendeService;
+    @Inject MembreService membreService;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)

@@ -1,5 +1,7 @@
 package sn.association.cotisations.service;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,12 +17,13 @@ import java.util.List;
  * Pas de planification automatique (Quartz / @Schedule) — déclenchement manuel
  * par l'admin depuis la page "Membres en retard".
  */
+@ApplicationScoped
 public class RappelService {
 
     private static final Logger log = LoggerFactory.getLogger(RappelService.class);
 
-    private final CotisationService cotisationService = new CotisationService();
-    private final MailService mailService = new MailService();
+    @Inject CotisationService cotisationService;
+    @Inject MailService mailService;
 
     public static class Resultat {
         public int envoyes;

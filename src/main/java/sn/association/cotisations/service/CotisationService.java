@@ -1,5 +1,7 @@
 package sn.association.cotisations.service;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import sn.association.cotisations.dao.CotisationDAO;
 import sn.association.cotisations.dao.MembreDAO;
 import sn.association.cotisations.entity.Cotisation;
@@ -15,13 +17,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@ApplicationScoped
 public class CotisationService {
 
     /** Montant mensuel par défaut d'une cotisation, en FCFA. */
     public static final BigDecimal MONTANT_PAR_DEFAUT = new BigDecimal("5000");
 
-    private final CotisationDAO cotisationDAO = new CotisationDAO();
-    private final MembreDAO membreDAO = new MembreDAO();
+    @Inject CotisationDAO cotisationDAO = new CotisationDAO();
+    @Inject MembreDAO membreDAO = new MembreDAO();
 
     public List<Cotisation> listerTout() {
         return cotisationDAO.findAll();

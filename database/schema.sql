@@ -44,6 +44,16 @@ CREATE TABLE IF NOT EXISTS amende (
     CONSTRAINT fk_amende_membre FOREIGN KEY (membre_numero) REFERENCES membre(numero) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- ---------- Table PASSWORD_RESET_TOKEN ----------
+CREATE TABLE IF NOT EXISTS password_reset_token (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    membre_numero   INT NOT NULL,
+    token           VARCHAR(80) NOT NULL UNIQUE,
+    expire_at       DATETIME NOT NULL,
+    used_at         DATETIME,
+    CONSTRAINT fk_prt_membre FOREIGN KEY (membre_numero) REFERENCES membre(numero) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- ---------- Table CONNEXION (historique d'authentification) ----------
 CREATE TABLE IF NOT EXISTS connexion (
     id              INT AUTO_INCREMENT PRIMARY KEY,

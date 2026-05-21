@@ -1,5 +1,6 @@
 package sn.association.cotisations.servlet;
 
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -34,7 +35,7 @@ import java.util.Optional;
 })
 public class MembresServlet extends HttpServlet {
 
-    private final MembreService membreService = new MembreService();
+    @Inject MembreService membreService;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)

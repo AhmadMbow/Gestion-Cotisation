@@ -1,5 +1,6 @@
 package sn.association.cotisations.servlet;
 
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -13,6 +14,7 @@ import sn.association.cotisations.entity.Connexion;
 import sn.association.cotisations.entity.Membre;
 import sn.association.cotisations.entity.Role;
 import sn.association.cotisations.service.AuthService;
+import sn.association.cotisations.util.LoginRateLimiter;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -23,8 +25,9 @@ public class LoginServlet extends HttpServlet {
 
     private static final Logger log = LoggerFactory.getLogger(LoginServlet.class);
 
-    private final AuthService authService = new AuthService();
-    private final ConnexionDAO connexionDAO = new ConnexionDAO();
+    @Inject AuthService authService;
+    @Inject ConnexionDAO connexionDAO;
+    @Inject LoginRateLimiter rateLimiter;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -42,17 +45,30 @@ public class LoginServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
+
+        String ip = req.getRemoteAddr();
+        if (rateLimiter.isBlocked(ip)) {
+            long secs = rateLimiter.secondsUntilUnblock(ip);
+            req.setAttribute("error",
+                    "Trop de tentatives échouées. Réessayez dans " + Math.max(1, secs / 60) + " min.");
+            req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
+            return;
+        }
+
         String email = req.getParameter("email");
         String password = req.getParameter("password");
 
         Optional<Membre> opt = authService.authenticate(email, password);
         if (opt.isEmpty()) {
+            rateLimiter.recordFailure(ip);
+            log.warn("Échec d'authentification pour {} depuis {}", email, ip);
             req.setAttribute("error", "Email ou mot de passe incorrect.");
             req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp").forward(req, resp);
             return;
         }
 
         Membre m = opt.get();
+        rateLimiter.recordSuccess(ip);
         // Régénérer la session pour éviter le session fixation
         HttpSession old = req.getSession(false);
         if (old != null) old.invalidate();

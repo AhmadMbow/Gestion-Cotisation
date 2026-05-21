@@ -1,5 +1,6 @@
 package sn.association.cotisations.servlet;
 
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -24,7 +25,7 @@ import java.util.Optional;
 @WebServlet(name = "ProfilServlet", urlPatterns = {"/profil"})
 public class ProfilServlet extends HttpServlet {
 
-    private final MembreDAO membreDAO = new MembreDAO();
+    @Inject MembreDAO membreDAO;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)

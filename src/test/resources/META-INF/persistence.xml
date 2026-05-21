@@ -5,7 +5,8 @@
                                  https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
              version="3.0">
 
-    <persistence-unit name="cotisationsPU" transaction-type="RESOURCE_LOCAL">
+    <!-- Unité de persistance dédiée aux tests : H2 en mémoire, schéma recréé à chaque run. -->
+    <persistence-unit name="testPU" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 
         <class>sn.association.cotisations.entity.Membre</class>
@@ -15,16 +16,15 @@
         <class>sn.association.cotisations.entity.PasswordResetToken</class>
 
         <properties>
-            <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
+            <property name="jakarta.persistence.jdbc.driver" value="org.h2.Driver"/>
             <property name="jakarta.persistence.jdbc.url"
-                      value="jdbc:mysql://localhost:3306/cotisations_db?useSSL=false&amp;serverTimezone=UTC&amp;createDatabaseIfNotExist=true"/>
-            <property name="jakarta.persistence.jdbc.user" value="root"/>
+                      value="jdbc:h2:mem:cotisations-test;DB_CLOSE_DELAY=-1;MODE=MySQL"/>
+            <property name="jakarta.persistence.jdbc.user" value="sa"/>
             <property name="jakarta.persistence.jdbc.password" value=""/>
 
-            <property name="hibernate.dialect" value="org.hibernate.dialect.MySQLDialect"/>
-            <property name="hibernate.hbm2ddl.auto" value="update"/>
-            <property name="hibernate.show_sql" value="true"/>
-            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
+            <property name="hibernate.show_sql" value="false"/>
         </properties>
     </persistence-unit>
 </persistence>

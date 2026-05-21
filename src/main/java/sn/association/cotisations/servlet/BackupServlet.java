@@ -1,5 +1,6 @@
 package sn.association.cotisations.servlet;
 
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -28,10 +29,10 @@ import java.util.List;
 @WebServlet(name = "BackupServlet", urlPatterns = {"/admin/backup"})
 public class BackupServlet extends HttpServlet {
 
-    private final MembreDAO membreDAO = new MembreDAO();
-    private final CotisationDAO cotisationDAO = new CotisationDAO();
-    private final AmendeDAO amendeDAO = new AmendeDAO();
-    private final ConnexionDAO connexionDAO = new ConnexionDAO();
+    @Inject MembreDAO membreDAO;
+    @Inject CotisationDAO cotisationDAO;
+    @Inject AmendeDAO amendeDAO;
+    @Inject ConnexionDAO connexionDAO;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)

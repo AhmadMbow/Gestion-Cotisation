@@ -1,8 +1,8 @@
 # Gestion Cotisations Association — Jakarta EE
 
-Application Web Jakarta EE pour la gestion des **membres**, **cotisations mensuelles** et **amendes** d'une association.
+Application Web Jakarta EE 10 pour la gestion des **membres**, **cotisations mensuelles** et **amendes** d'une association.
 
-Template UI : **AdminLTE 3.2.0** (Bootstrap 4, MIT License) — déjà intégré dans `src/main/webapp/assets/`.
+Template UI : **AdminLTE 3.2.0** (Bootstrap 4, MIT License) — intégré dans `src/main/webapp/assets/`.
 
 ---
 
@@ -11,13 +11,14 @@ Template UI : **AdminLTE 3.2.0** (Bootstrap 4, MIT License) — déjà intégré
 | Couche        | Technologie                                              |
 |---------------|----------------------------------------------------------|
 | Présentation  | JSP / JSTL 3.0, AdminLTE 3 (Bootstrap 4), Chart.js       |
-| Métier        | Servlets Jakarta EE 10, services CDI                     |
+| Métier        | Servlets Jakarta EE 10, services **CDI** (Weld)          |
 | Persistance   | JPA 3.1 / Hibernate 6                                    |
-| Base          | MySQL 8                                                  |
+| Base          | MySQL 8 (prod), H2 in-memory (tests)                     |
 | Serveur       | Apache Tomcat 10+ (ou TomEE 10)                          |
 | Build         | Maven 3.9+, Java 17                                      |
+| Tests         | JUnit 5 (20 tests : 16 unitaires + 4 d'intégration H2)   |
 
-> ⚠️ **Important** — Jakarta EE 10 utilise le namespace `jakarta.*` (et non `javax.*`). Il faut donc **Tomcat 10+**, pas Tomcat 9.
+> ⚠️ **Important** — Jakarta EE 10 utilise le namespace `jakarta.*` (et non `javax.*`). Il faut **Tomcat 10+**, pas Tomcat 9.
 
 ---
 
@@ -27,27 +28,28 @@ Template UI : **AdminLTE 3.2.0** (Bootstrap 4, MIT License) — déjà intégré
 gestion-cotisations/
 ├── pom.xml
 ├── database/
-│   └── schema.sql                  ← Script de création MySQL
+│   ├── schema.sql                       ← Script de création MySQL
+│   └── migration_unique_cotisation.sql  ← Migration contrainte unique
 ├── src/main/java/sn/association/cotisations/
-│   ├── entity/                     ← Entités JPA (Membre, Cotisation, Amende)
-│   ├── dao/                        ← Accès aux données
-│   ├── service/                    ← Logique métier
-│   ├── servlet/                    ← Contrôleurs HTTP
-│   ├── filter/                     ← Filtres (auth, encoding…)
-│   └── util/                       ← Utilitaires (BCrypt, PDF, Excel…)
+│   ├── entity/                          ← Entités JPA (Membre, Cotisation, Amende, Connexion, PasswordResetToken)
+│   ├── dao/                             ← DAO @ApplicationScoped
+│   ├── service/                         ← Services métier CDI
+│   ├── servlet/                         ← Contrôleurs HTTP (avec @Inject)
+│   ├── filter/                          ← AuthFilter, CsrfFilter
+│   └── util/                            ← BCrypt, CSRF, JPA, rate-limiter
 ├── src/main/resources/META-INF/
-│   └── persistence.xml             ← Config JPA / Hibernate
-└── src/main/webapp/
-    ├── WEB-INF/
-    │   ├── web.xml
-    │   └── views/
-    │       ├── auth/login.jsp
-    │       ├── admin/dashboard.jsp
-    │       ├── member/dashboard.jsp
-    │       ├── layout/             ← header, sidebar, footer
-    │       └── error/              ← 404, 500
-    ├── assets/                     ← AdminLTE (dist + plugins)
-    └── index.jsp
+│   └── persistence.xml                  ← Config JPA prod (MySQL)
+├── src/main/webapp/
+│   ├── WEB-INF/
+│   │   ├── web.xml
+│   │   ├── beans.xml                    ← Config CDI
+│   │   └── views/                       ← JSP
+│   └── assets/                          ← AdminLTE
+└── src/test/
+    ├── java/.../service/                ← Tests unitaires validation
+    ├── java/.../integration/            ← Tests d'intégration H2
+    └── resources/META-INF/
+        └── persistence.xml              ← Config JPA test (H2)
 ```
 
 ---
@@ -58,13 +60,18 @@ gestion-cotisations/
 - JDK 17+
 - Maven 3.9+
 - MySQL 8 démarré en local
-- Tomcat 10+ (configuré dans l'IDE)
+- Tomcat 10+
 
 ### 2. Base de données
 ```bash
 mysql -u root -p < database/schema.sql
 ```
-Ajustez ensuite l'utilisateur / mot de passe dans `src/main/resources/META-INF/persistence.xml`.
+Si vous avez une base déjà créée à partir d'une ancienne version, appliquez la migration :
+```bash
+mysql -u root cotisations_db < database/migration_unique_cotisation.sql
+```
+
+Ajustez l'utilisateur / mot de passe dans `src/main/resources/META-INF/persistence.xml` ou via les variables d'environnement (voir plus bas).
 
 ### 3. Build
 ```bash
@@ -72,13 +79,21 @@ mvn clean package
 ```
 Produit `target/gestion-cotisations.war`.
 
-### 4. Déploiement
-- **IntelliJ / NetBeans / Eclipse** : ajoutez le projet à un serveur Tomcat 10.
-- **Tomcat en ligne de commande** : copiez le `.war` dans `$CATALINA_HOME/webapps/`.
+### 4. Tests
+```bash
+mvn test
+```
+20 tests passent :
+- **16 unitaires** (sans BDD) : hash BCrypt, validations métier
+- **4 d'intégration** sur H2 in-memory : persistence membre / cotisation / unicité
 
-L'application est ensuite accessible sur : `http://localhost:8080/gestion-cotisations/`
+### 5. Déploiement
+- **IDE** (IntelliJ / Eclipse / NetBeans) : ajoutez le projet à un serveur Tomcat 10.
+- **Tomcat CLI** : copiez le `.war` dans `$CATALINA_HOME/webapps/`.
 
-### 5. Comptes de démo (mot de passe : `admin123`)
+L'appli est ensuite accessible sur : `http://localhost:8080/gestion-cotisations/`
+
+### 6. Comptes de démo (mot de passe : `admin123`)
 | Email             | Rôle    |
 |-------------------|---------|
 | admin@asso.sn     | ADMIN   |
@@ -87,39 +102,38 @@ L'application est ensuite accessible sur : `http://localhost:8080/gestion-cotisa
 
 ---
 
-## Conventions
+## Modules
 
-- Les vues JSP sont protégées dans `WEB-INF/views/` (non accessibles directement).
-- Les assets statiques (`/assets/**`) servent CSS / JS d'AdminLTE.
-- Les fragments communs (header, sidebar, footer) sont dans `layout/` et inclus via `<jsp:include>`.
-- Variable `${activeMenu}` à définir dans chaque page pour surligner l'élément de menu actif.
+### Fonctionnels
+- **Membres** : CRUD, activer/désactiver, recherche (DataTables).
+- **Cotisations** : enregistrement, historique, retards, mois dus, reçu PDF (iText).
+- **Amendes** : génération auto pour retards + amendes manuelles, paiement, historique.
+- **Authentification** : email/mot de passe BCrypt, rôles ADMIN/MEMBRE, anti session-fixation.
+- **Profil** : édition des infos personnelles + changement de mot de passe.
+- **Rapports** : dashboard, statistiques, top retardataires, évolution 12 mois (Chart.js).
+- **Exports Excel** (Apache POI) — membres, cotisations, amendes.
+- **Sauvegarde SQL** (`/admin/backup`) — dump complet téléchargeable.
+- **Emails** (Jakarta Mail) — rappels de cotisation + lien de réinitialisation de mot de passe.
+- **Historique des connexions** (`/admin/connexions`).
 
----
-
-## Modules implémentés
-
-- **Entités JPA** : `Membre`, `Cotisation`, `Amende` + enums (`Role`, `ModePaiement`, `Statut*`).
-- **DAO CRUD** : `MembreDAO`, `CotisationDAO`, `AmendeDAO` (via `JPAUtil`).
-- **Services métier** : `AuthService` (BCrypt), `MembreService`, `CotisationService`, `AmendeService`, `RapportService`, `MailService`, `RappelService`.
-- **Filtre d'authentification** (`AuthFilter`) protégeant `/admin/**`, `/membre/**` et `/profil`.
-- **Servlets** : login/logout, mot de passe oublié, dashboards admin/membre, CRUD membres/cotisations/amendes, rapports.
-- **Profil** (`/profil`) : édition des informations personnelles + changement de mot de passe.
-- **Exports** (`/admin/exports`) : listes membres / cotisations / amendes au format **Excel** (Apache POI).
-- **Reçu PDF** (`/admin/recu?id=X&format=pdf` ou `/membre/recu?id=X&format=pdf`) généré avec **iText 8**.
-- **Envoi d'emails** (Jakarta Mail) : réinitialisation de mot de passe + rappels de cotisation aux membres en retard (déclenché manuellement depuis la page _Membres en retard_).
+### Sécurité
+- **Protection CSRF** sur tous les POST (token base64-32B en session, comparaison constant-time).
+- **Rate-limit /login** : 5 tentatives par IP / 10 min → blocage 10 min.
+- **Reset password par lien sécurisé** : token aléatoire en base, expiration 30 min, usage unique.
+- **Anti-énumération** : `/forgot-password` répond la même chose quelle que soit l'existence de l'email.
+- **Contrainte d'unicité BD** `(membre, mois, annee)` empêchant les doublons de cotisation même en concurrence.
+- **Session HTTP-only** (cookie non lisible en JS).
 
 ---
 
 ## Variables d'environnement
 
-Les paramètres sensibles ne sont **pas dans le code**. À définir dans l'environnement de Tomcat (par ex. `bin/setenv.bat` ou `bin/setenv.sh`) :
-
 | Variable        | Défaut | Rôle |
 |-----------------|--------|------|
-| `DB_URL`        | (utilise persistence.xml) | URL JDBC de la base MySQL |
-| `DB_USER`       | (utilise persistence.xml) | Utilisateur MySQL |
-| `DB_PASSWORD`   | (utilise persistence.xml) | Mot de passe MySQL |
-| `SMTP_HOST`     | — | Serveur SMTP (ex. `smtp.gmail.com`). Si vide, les emails sont seulement loggés. |
+| `DB_URL`        | (persistence.xml) | URL JDBC MySQL |
+| `DB_USER`       | (persistence.xml) | Utilisateur MySQL |
+| `DB_PASSWORD`   | (persistence.xml) | Mot de passe MySQL |
+| `SMTP_HOST`     | — | Serveur SMTP (ex. `smtp.gmail.com`). Si vide, les emails sont logués. |
 | `SMTP_PORT`     | `587` | Port SMTP |
 | `SMTP_USER`     | — | Compte SMTP |
 | `SMTP_PASSWORD` | — | Mot de passe ou _app password_ |
@@ -127,6 +141,29 @@ Les paramètres sensibles ne sont **pas dans le code**. À définir dans l'envir
 | `SMTP_STARTTLS` | `true` | Active STARTTLS |
 
 Pour Gmail, créer un **App Password** sur https://myaccount.google.com/apppasswords.
+
+---
+
+## Passage en production
+
+Modifier `src/main/resources/META-INF/persistence.xml` :
+
+```xml
+<property name="hibernate.hbm2ddl.auto" value="validate"/>
+<property name="hibernate.show_sql"    value="false"/>
+<property name="hibernate.format_sql"  value="false"/>
+```
+
+Activer HTTPS sur Tomcat puis dans `web.xml` :
+
+```xml
+<session-config>
+    <cookie-config>
+        <http-only>true</http-only>
+        <secure>true</secure>
+    </cookie-config>
+</session-config>
+```
 
 ---
 

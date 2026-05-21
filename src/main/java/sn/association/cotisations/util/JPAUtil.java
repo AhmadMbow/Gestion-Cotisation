@@ -17,15 +17,25 @@ import java.util.Map;
  */
 public final class JPAUtil {
 
-    private static final String PERSISTENCE_UNIT_NAME = "cotisationsPU";
+    private static String unitName = "cotisationsPU";
     private static EntityManagerFactory emf;
 
     private JPAUtil() {
     }
 
+    /**
+     * Permet aux tests d'intégration de basculer sur un autre persistence-unit (ex: H2 en mémoire).
+     * Doit être appelé AVANT toute utilisation de l'EMF — ferme l'EMF actuel si déjà ouvert.
+     */
+    public static synchronized void setUnitName(String name) {
+        if (emf != null && emf.isOpen()) emf.close();
+        emf = null;
+        unitName = name;
+    }
+
     public static synchronized EntityManagerFactory getEntityManagerFactory() {
         if (emf == null || !emf.isOpen()) {
-            emf = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME, jdbcOverrides());
+            emf = Persistence.createEntityManagerFactory(unitName, jdbcOverrides());
         }
         return emf;
     }

@@ -1,5 +1,7 @@
 package sn.association.cotisations.service;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import sn.association.cotisations.dao.MembreDAO;
 import sn.association.cotisations.entity.Membre;
 import sn.association.cotisations.entity.Role;
@@ -10,9 +12,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+@ApplicationScoped
 public class MembreService {
 
-    private final MembreDAO membreDAO = new MembreDAO();
+    @Inject MembreDAO membreDAO = new MembreDAO();
 
     public List<Membre> listerTous() {
         return membreDAO.findAll();

@@ -1,5 +1,7 @@
 package sn.association.cotisations.service;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import sn.association.cotisations.dao.AmendeDAO;
 import sn.association.cotisations.dao.CotisationDAO;
 import sn.association.cotisations.dao.MembreDAO;
@@ -18,15 +20,16 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+@ApplicationScoped
 public class RapportService {
 
     private static final Locale FR = Locale.FRENCH;
 
-    private final CotisationDAO cotisationDAO = new CotisationDAO();
-    private final MembreDAO membreDAO = new MembreDAO();
-    private final AmendeDAO amendeDAO = new AmendeDAO();
-    private final CotisationService cotisationService = new CotisationService();
-    private final AmendeService amendeService = new AmendeService();
+    @Inject CotisationDAO cotisationDAO;
+    @Inject MembreDAO membreDAO;
+    @Inject AmendeDAO amendeDAO;
+    @Inject CotisationService cotisationService;
+    @Inject AmendeService amendeService;
 
     /** Évolution des cotisations sur les 12 derniers mois. */
     public static class SerieMensuelle {

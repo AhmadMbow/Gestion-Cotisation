@@ -1,11 +1,13 @@
 package sn.association.cotisations.dao;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import sn.association.cotisations.entity.Connexion;
 import sn.association.cotisations.util.JPAUtil;
 
 import java.util.List;
 
+@ApplicationScoped
 public class ConnexionDAO {
 
     public Connexion save(Connexion c) {

@@ -1,5 +1,6 @@
 package sn.association.cotisations.servlet;
 
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -29,7 +30,7 @@ import java.util.List;
 })
 public class MembreCotisationsServlet extends HttpServlet {
 
-    private final CotisationService cotisationService = new CotisationService();
+    @Inject CotisationService cotisationService;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
