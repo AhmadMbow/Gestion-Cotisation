@@ -3,77 +3,99 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Connexion | Gestion Cotisations</title>
 
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/plugins/fontawesome-free/css/all.min.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/dist/css/adminlte.min.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/plugins/login-template/css/util.css">
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/plugins/login-template/css/main.css">
+
+    <style>
+        /* Petits ajustements pour notre contexte */
+        .login100-form-title small { display:block; font-size:13px; font-weight:400; color:#666; margin-top:6px; }
+        .alert-msg {
+            width:100%; padding:10px 14px; border-radius:12px; font-size:13px;
+            margin-bottom:12px; display:flex; align-items:flex-start; gap:8px;
+        }
+        .alert-msg.error   { background:#fdecea; color:#c62828; border:1px solid #f5c6cb; }
+        .alert-msg.success { background:#e8f5e9; color:#2e7d32; border:1px solid #c8e6c9; }
+        .form-link-row { display:flex; justify-content:space-between; align-items:center; width:100%; padding-top:14px; }
+    </style>
 </head>
-<body class="hold-transition login-page">
-<div class="login-box">
-    <div class="login-logo">
-        <a href="${pageContext.request.contextPath}/"><b>Gestion</b>Cotisations</a>
-    </div>
+<body>
 
-    <div class="card">
-        <div class="card-body login-card-body">
-            <p class="login-box-msg">Connectez-vous à votre espace</p>
+<div class="limiter">
+    <div class="container-login100">
+        <div class="wrap-login100">
 
-            <jsp:include page="/WEB-INF/views/layout/flash-messages.jsp"/>
+            <div class="login100-pic js-tilt" data-tilt>
+                <img src="${pageContext.request.contextPath}/assets/plugins/login-template/images/img-01.png" alt="Illustration">
+            </div>
 
-            <c:if test="${not empty error}">
-                <div class="alert alert-danger alert-dismissible">
-                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                    <i class="fas fa-ban"></i> ${error}
-                </div>
-            </c:if>
-            <c:if test="${not empty success}">
-                <div class="alert alert-success alert-dismissible">
-                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                    <i class="fas fa-check"></i> ${success}
-                </div>
-            </c:if>
-
-            <form action="${pageContext.request.contextPath}/login" method="post">
+            <form class="login100-form validate-form" action="${pageContext.request.contextPath}/login" method="post" autocomplete="on">
                 <input type="hidden" name="_csrf" value="${csrfToken}">
-                <div class="input-group mb-3">
-                    <input type="email" name="email" class="form-control" placeholder="Email" required
-                           value="${param.email}">
-                    <div class="input-group-append">
-                        <div class="input-group-text"><span class="fas fa-envelope"></span></div>
+
+                <span class="login100-form-title">
+                    Connexion
+                    <small>Gestion Cotisations Association</small>
+                </span>
+
+                <jsp:include page="/WEB-INF/views/layout/flash-messages.jsp"/>
+
+                <c:if test="${not empty error}">
+                    <div class="alert-msg error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>${error}</span>
                     </div>
+                </c:if>
+                <c:if test="${not empty success}">
+                    <div class="alert-msg success">
+                        <i class="fas fa-check-circle"></i>
+                        <span>${success}</span>
+                    </div>
+                </c:if>
+
+                <div class="wrap-input100 validate-input" data-validate="Email requis">
+                    <input class="input100" type="email" name="email" required autofocus
+                           placeholder="Email" value="${param.email}">
+                    <span class="focus-input100"></span>
+                    <span class="symbol-input100">
+                        <i class="fa fa-envelope" aria-hidden="true"></i>
+                    </span>
                 </div>
-                <div class="input-group mb-3">
-                    <input type="password" name="password" class="form-control" placeholder="Mot de passe" required>
-                    <div class="input-group-append">
-                        <div class="input-group-text"><span class="fas fa-lock"></span></div>
-                    </div>
+
+                <div class="wrap-input100 validate-input" data-validate="Mot de passe requis">
+                    <input class="input100" type="password" name="password" required
+                           placeholder="Mot de passe">
+                    <span class="focus-input100"></span>
+                    <span class="symbol-input100">
+                        <i class="fa fa-lock" aria-hidden="true"></i>
+                    </span>
                 </div>
-                <div class="row">
-                    <div class="col-8">
-                        <div class="icheck-primary">
-                            <input type="checkbox" id="remember" name="remember">
-                            <label for="remember">Se souvenir de moi</label>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <button type="submit" class="btn btn-primary btn-block">Connexion</button>
-                    </div>
+
+                <div class="container-login100-form-btn">
+                    <button type="submit" class="login100-form-btn">
+                        Se connecter
+                    </button>
+                </div>
+
+                <div class="form-link-row">
+                    <span class="txt1">Mot de passe perdu ?</span>
+                    <a class="txt2" href="${pageContext.request.contextPath}/forgot-password">
+                        Réinitialiser
+                        <i class="fa fa-long-arrow-right" aria-hidden="true" style="margin-left:4px"></i>
+                    </a>
                 </div>
             </form>
-
-            <p class="mb-1 mt-3">
-                <a href="${pageContext.request.contextPath}/forgot-password">Mot de passe oublié ?</a>
-            </p>
         </div>
     </div>
 </div>
 
 <script src="${pageContext.request.contextPath}/assets/plugins/jquery/jquery.min.js"></script>
-<script src="${pageContext.request.contextPath}/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="${pageContext.request.contextPath}/assets/dist/js/adminlte.min.js"></script>
+<script src="${pageContext.request.contextPath}/assets/plugins/login-template/js/tilt.jquery.min.js"></script>
+<script>
+    $(function () { $('.js-tilt').tilt({ scale: 1.1 }); });
+</script>
 </body>
 </html>

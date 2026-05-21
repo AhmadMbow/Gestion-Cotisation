@@ -28,7 +28,9 @@
         <a href="?id=${cotisation.id}&format=pdf" target="_blank" class="btn btn-danger">
             <i class="fas fa-file-pdf mr-1"></i> Télécharger PDF
         </a>
-        <a href="javascript:window.close()" class="btn btn-default">
+        <a href="${pageContext.request.contextPath}/${sessionScope.user.role == 'ADMIN' ? 'admin' : 'membre'}/cotisations"
+           onclick="if (window.opener && !window.opener.closed) { window.close(); return false; } return true;"
+           class="btn btn-default">
             <i class="fas fa-times mr-1"></i> Fermer
         </a>
     </div>

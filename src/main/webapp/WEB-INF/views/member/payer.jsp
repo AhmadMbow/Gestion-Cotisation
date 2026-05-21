@@ -61,7 +61,7 @@
                                     <div class="form-group col-md-4">
                                         <label for="montant">Montant (FCFA) <span class="text-danger">*</span></label>
                                         <input type="number" id="montant" name="montant" class="form-control"
-                                               min="1" step="100" value="${montantParDefaut}" required>
+                                               min="100" step="100" value="${montantParDefaut}" required>
                                     </div>
                                 </div>
 
