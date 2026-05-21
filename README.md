@@ -96,17 +96,37 @@ L'application est ensuite accessible sur : `http://localhost:8080/gestion-cotisa
 
 ---
 
-## TODO côté code
+## Modules implémentés
 
-Cette base contient l'UI complète + 3 servlets de démonstration. Il reste à implémenter :
+- **Entités JPA** : `Membre`, `Cotisation`, `Amende` + enums (`Role`, `ModePaiement`, `Statut*`).
+- **DAO CRUD** : `MembreDAO`, `CotisationDAO`, `AmendeDAO` (via `JPAUtil`).
+- **Services métier** : `AuthService` (BCrypt), `MembreService`, `CotisationService`, `AmendeService`, `RapportService`, `MailService`, `RappelService`.
+- **Filtre d'authentification** (`AuthFilter`) protégeant `/admin/**`, `/membre/**` et `/profil`.
+- **Servlets** : login/logout, mot de passe oublié, dashboards admin/membre, CRUD membres/cotisations/amendes, rapports.
+- **Profil** (`/profil`) : édition des informations personnelles + changement de mot de passe.
+- **Exports** (`/admin/exports`) : listes membres / cotisations / amendes au format **Excel** (Apache POI).
+- **Reçu PDF** (`/admin/recu?id=X&format=pdf` ou `/membre/recu?id=X&format=pdf`) généré avec **iText 8**.
+- **Envoi d'emails** (Jakarta Mail) : réinitialisation de mot de passe + rappels de cotisation aux membres en retard (déclenché manuellement depuis la page _Membres en retard_).
 
-1. **Entités JPA** : `Membre`, `Cotisation`, `Amende` (mapping dans `persistence.xml`).
-2. **DAO** : EntityManager + opérations CRUD.
-3. **Services** : `AuthService` (BCrypt), `MembreService`, `CotisationService`, `AmendeService`.
-4. **Filtre d'authentification** : protéger `/admin/**` et `/membre/**`.
-5. **Servlets CRUD** pour membres, cotisations, amendes.
-6. **Génération PDF** (iText) et **Excel** (Apache POI).
-7. **Envoi d'emails** (Jakarta Mail) pour les rappels de cotisation.
+---
+
+## Variables d'environnement
+
+Les paramètres sensibles ne sont **pas dans le code**. À définir dans l'environnement de Tomcat (par ex. `bin/setenv.bat` ou `bin/setenv.sh`) :
+
+| Variable        | Défaut | Rôle |
+|-----------------|--------|------|
+| `DB_URL`        | (utilise persistence.xml) | URL JDBC de la base MySQL |
+| `DB_USER`       | (utilise persistence.xml) | Utilisateur MySQL |
+| `DB_PASSWORD`   | (utilise persistence.xml) | Mot de passe MySQL |
+| `SMTP_HOST`     | — | Serveur SMTP (ex. `smtp.gmail.com`). Si vide, les emails sont seulement loggés. |
+| `SMTP_PORT`     | `587` | Port SMTP |
+| `SMTP_USER`     | — | Compte SMTP |
+| `SMTP_PASSWORD` | — | Mot de passe ou _app password_ |
+| `SMTP_FROM`     | = `SMTP_USER` | Adresse expéditeur |
+| `SMTP_STARTTLS` | `true` | Active STARTTLS |
+
+Pour Gmail, créer un **App Password** sur https://myaccount.google.com/apppasswords.
 
 ---
 

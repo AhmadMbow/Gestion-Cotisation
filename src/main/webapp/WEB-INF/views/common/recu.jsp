@@ -23,8 +23,11 @@
 
     <div class="text-right mb-3 no-print">
         <button onclick="window.print()" class="btn btn-primary">
-            <i class="fas fa-print mr-1"></i> Imprimer / PDF
+            <i class="fas fa-print mr-1"></i> Imprimer
         </button>
+        <a href="?id=${cotisation.id}&format=pdf" target="_blank" class="btn btn-danger">
+            <i class="fas fa-file-pdf mr-1"></i> Télécharger PDF
+        </a>
         <a href="javascript:window.close()" class="btn btn-default">
             <i class="fas fa-times mr-1"></i> Fermer
         </a>

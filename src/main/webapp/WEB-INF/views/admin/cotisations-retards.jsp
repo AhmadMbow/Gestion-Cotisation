@@ -26,6 +26,8 @@
     <section class="content">
         <div class="container-fluid">
 
+            <jsp:include page="../layout/flash-messages.jsp"/>
+
             <c:choose>
                 <c:when test="${empty membresEnRetard}">
                     <div class="alert alert-success">
@@ -34,8 +36,18 @@
                     </div>
                 </c:when>
                 <c:otherwise>
-                    <div class="callout callout-warning">
-                        <h5><i class="fas fa-exclamation-triangle mr-1"></i> ${membresEnRetard.size()} membre(s) n'ont pas payé pour ${moisCourant}/${anneeCourante}</h5>
+                    <div class="callout callout-warning d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            ${membresEnRetard.size()} membre(s) n'ont pas payé pour ${moisCourant}/${anneeCourante}
+                        </h5>
+                        <form method="post" action="${pageContext.request.contextPath}/admin/rappels"
+                              onsubmit="return confirm('Envoyer un rappel par email à tous les membres en retard ?');"
+                              class="mb-0">
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-paper-plane mr-1"></i> Envoyer les rappels par email
+                            </button>
+                        </form>
                     </div>
 
                     <div class="card">

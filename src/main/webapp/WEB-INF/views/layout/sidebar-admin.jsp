@@ -96,6 +96,13 @@
 
                 <li class="nav-header">COMPTE</li>
                 <li class="nav-item">
+                    <a href="${pageContext.request.contextPath}/profil"
+                       class="nav-link ${activeMenu == 'profil' ? 'active' : ''}">
+                        <i class="nav-icon fas fa-id-card"></i>
+                        <p>Mon profil</p>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="${pageContext.request.contextPath}/logout" class="nav-link">
                         <i class="nav-icon fas fa-sign-out-alt"></i>
                         <p>Déconnexion</p>

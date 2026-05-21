@@ -22,6 +22,8 @@
         <div class="card-body login-card-body">
             <p class="login-box-msg">Connectez-vous à votre espace</p>
 
+            <jsp:include page="/WEB-INF/views/layout/flash-messages.jsp"/>
+
             <c:if test="${not empty error}">
                 <div class="alert alert-danger alert-dismissible">
                     <button type="button" class="close" data-dismiss="alert">&times;</button>

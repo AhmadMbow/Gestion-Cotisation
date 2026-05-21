@@ -38,6 +38,9 @@ dist/
 nbbuild/
 nbdist/
 .nb-gradle/
+# Exception : la distribution AdminLTE doit etre versionnee
+!src/main/webapp/assets/dist/
+!src/main/webapp/assets/dist/**
 
 # ===== VS Code =====
 .vscode/
