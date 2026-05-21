@@ -6,17 +6,25 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import sn.association.cotisations.dao.ConnexionDAO;
+import sn.association.cotisations.entity.Connexion;
 import sn.association.cotisations.entity.Membre;
 import sn.association.cotisations.entity.Role;
 import sn.association.cotisations.service.AuthService;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @WebServlet(name = "LoginServlet", urlPatterns = {"/login"})
 public class LoginServlet extends HttpServlet {
 
+    private static final Logger log = LoggerFactory.getLogger(LoginServlet.class);
+
     private final AuthService authService = new AuthService();
+    private final ConnexionDAO connexionDAO = new ConnexionDAO();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -53,7 +61,22 @@ public class LoginServlet extends HttpServlet {
         session.setAttribute("role", m.getRole().name());
         session.setMaxInactiveInterval(30 * 60);
 
+        logConnexion(req, m);
         redirectToDashboard(req, resp, m);
+    }
+
+    /**
+     * Enregistre la connexion en BDD. Best-effort : on n'empêche jamais le login
+     * si l'audit log plante (la BDD peut être en lecture seule, etc.).
+     */
+    private void logConnexion(HttpServletRequest req, Membre m) {
+        try {
+            String ua = req.getHeader("User-Agent");
+            if (ua != null && ua.length() > 255) ua = ua.substring(0, 255);
+            connexionDAO.save(new Connexion(m, LocalDateTime.now(), req.getRemoteAddr(), ua));
+        } catch (RuntimeException e) {
+            log.warn("Impossible d'enregistrer la connexion de {} : {}", m.getEmail(), e.getMessage());
+        }
     }
 
     private void redirectToDashboard(HttpServletRequest req, HttpServletResponse resp, Membre m)

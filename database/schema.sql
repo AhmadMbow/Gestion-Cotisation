@@ -43,6 +43,17 @@ CREATE TABLE IF NOT EXISTS amende (
     CONSTRAINT fk_amende_membre FOREIGN KEY (membre_numero) REFERENCES membre(numero) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- ---------- Table CONNEXION (historique d'authentification) ----------
+CREATE TABLE IF NOT EXISTS connexion (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    membre_numero   INT NOT NULL,
+    date_connexion  DATETIME NOT NULL,
+    ip              VARCHAR(45),
+    user_agent      VARCHAR(255),
+    INDEX idx_connexion_membre (membre_numero),
+    CONSTRAINT fk_connexion_membre FOREIGN KEY (membre_numero) REFERENCES membre(numero) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- ---------- Données de démo ----------
 -- Mot de passe ci-dessous = "admin123" haché avec BCrypt (workload 12)
 INSERT INTO membre (prenom, nom, email, date_naissance, date_adhesion, statut, role, mot_de_passe) VALUES

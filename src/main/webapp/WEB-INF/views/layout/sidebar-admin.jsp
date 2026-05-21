@@ -93,6 +93,13 @@
                         <p>Export PDF / Excel</p>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="${pageContext.request.contextPath}/admin/connexions"
+                       class="nav-link ${activeMenu == 'connexions' ? 'active' : ''}">
+                        <i class="nav-icon fas fa-history"></i>
+                        <p>Historique connexions</p>
+                    </a>
+                </li>
 
                 <li class="nav-header">COMPTE</li>
                 <li class="nav-item">

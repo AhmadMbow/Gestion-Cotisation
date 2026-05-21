@@ -11,6 +11,7 @@
         <class>sn.association.cotisations.entity.Membre</class>
         <class>sn.association.cotisations.entity.Cotisation</class>
         <class>sn.association.cotisations.entity.Amende</class>
+        <class>sn.association.cotisations.entity.Connexion</class>
 
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
