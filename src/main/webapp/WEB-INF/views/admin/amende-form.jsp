@@ -37,6 +37,7 @@
                     <h3 class="card-title"><i class="fas fa-gavel mr-1"></i> Détails</h3>
                 </div>
                 <form method="post" action="${pageContext.request.contextPath}/admin/amendes/nouveau">
+                    <input type="hidden" name="_csrf" value="${csrfToken}">
                     <div class="card-body">
                         <div class="form-group">
                             <label for="membre">Membre <span class="text-danger">*</span></label>

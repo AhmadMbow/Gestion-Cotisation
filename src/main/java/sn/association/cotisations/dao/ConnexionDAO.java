@@ -23,6 +23,18 @@ public class ConnexionDAO {
         }
     }
 
+    public List<Connexion> findAll() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery(
+                    "SELECT c FROM Connexion c JOIN FETCH c.membre " +
+                    "ORDER BY c.id", Connexion.class)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
     /**
      * Dernières connexions, plus récentes en tête. Le membre est chargé eagerly.
      */

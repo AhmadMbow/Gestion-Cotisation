@@ -86,6 +86,7 @@
                                         </a>
                                         <form action="${pageContext.request.contextPath}/admin/membres/toggle"
                                               method="post" style="display:inline">
+                                            <input type="hidden" name="_csrf" value="${csrfToken}">
                                             <input type="hidden" name="id" value="${m.numero}">
                                             <button type="submit" class="btn btn-warning btn-xs"
                                                     title="${m.statut == 'ACTIF' ? 'Désactiver' : 'Activer'}">
@@ -96,6 +97,7 @@
                                             <form action="${pageContext.request.contextPath}/admin/membres/delete"
                                                   method="post" style="display:inline"
                                                   onsubmit="return confirm('Supprimer définitivement ${m.prenom} ${m.nom} ? Toutes ses cotisations et amendes seront aussi supprimées.');">
+                                                <input type="hidden" name="_csrf" value="${csrfToken}">
                                                 <input type="hidden" name="id" value="${m.numero}">
                                                 <button type="submit" class="btn btn-danger btn-xs" title="Supprimer">
                                                     <i class="fas fa-trash"></i>

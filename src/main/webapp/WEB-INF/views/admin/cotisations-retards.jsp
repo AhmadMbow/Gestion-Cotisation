@@ -44,6 +44,7 @@
                         <form method="post" action="${pageContext.request.contextPath}/admin/rappels"
                               onsubmit="return confirm('Envoyer un rappel par email à tous les membres en retard ?');"
                               class="mb-0">
+                            <input type="hidden" name="_csrf" value="${csrfToken}">
                             <button type="submit" class="btn btn-warning">
                                 <i class="fas fa-paper-plane mr-1"></i> Envoyer les rappels par email
                             </button>

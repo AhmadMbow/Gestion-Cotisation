@@ -40,6 +40,7 @@
                         </div>
 
                         <form method="post" action="${pageContext.request.contextPath}/membre/payer">
+                            <input type="hidden" name="_csrf" value="${csrfToken}">
                             <div class="card-body">
 
                                 <div class="form-row">

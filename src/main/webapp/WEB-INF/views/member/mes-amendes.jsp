@@ -81,6 +81,7 @@
                                             <form action="${pageContext.request.contextPath}/membre/amendes/payer"
                                                   method="post" style="display:inline"
                                                   onsubmit="return confirm('Confirmer le paiement de ${a.montant} FCFA ?');">
+                                                <input type="hidden" name="_csrf" value="${csrfToken}">
                                                 <input type="hidden" name="id" value="${a.id}">
                                                 <button type="submit" class="btn btn-success btn-sm">
                                                     <i class="fas fa-credit-card mr-1"></i> Payer

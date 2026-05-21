@@ -30,7 +30,8 @@ CREATE TABLE IF NOT EXISTS cotisation (
     annee           INT NOT NULL,
     mode_paiement   ENUM('ESPECES','VIREMENT','WAVE','ORANGE_MONEY','FREE_MONEY') NOT NULL,
     statut          ENUM('PAYE','EN_ATTENTE','ANNULE') NOT NULL DEFAULT 'PAYE',
-    CONSTRAINT fk_cotisation_membre FOREIGN KEY (membre_numero) REFERENCES membre(numero) ON DELETE CASCADE
+    CONSTRAINT fk_cotisation_membre FOREIGN KEY (membre_numero) REFERENCES membre(numero) ON DELETE CASCADE,
+    CONSTRAINT uk_cotisation_periode UNIQUE (membre_numero, mois, annee)
 ) ENGINE=InnoDB;
 
 -- ---------- Table AMENDE ----------

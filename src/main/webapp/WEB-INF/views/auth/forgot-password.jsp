@@ -35,6 +35,7 @@
             </c:if>
 
             <form action="${pageContext.request.contextPath}/forgot-password" method="post">
+                <input type="hidden" name="_csrf" value="${csrfToken}">
                 <div class="input-group mb-3">
                     <input type="email" name="email" class="form-control" placeholder="Email" required
                            value="${param.email}">

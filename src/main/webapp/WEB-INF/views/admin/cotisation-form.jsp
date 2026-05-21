@@ -38,6 +38,7 @@
                 </div>
 
                 <form method="post" action="${pageContext.request.contextPath}/admin/cotisations/nouveau">
+                    <input type="hidden" name="_csrf" value="${csrfToken}">
                     <div class="card-body">
 
                         <div class="form-group">

@@ -100,6 +100,13 @@
                         <p>Historique connexions</p>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="${pageContext.request.contextPath}/admin/backup"
+                       class="nav-link">
+                        <i class="nav-icon fas fa-database"></i>
+                        <p>Sauvegarde SQL</p>
+                    </a>
+                </li>
 
                 <li class="nav-header">COMPTE</li>
                 <li class="nav-item">

@@ -41,6 +41,7 @@
                             </p>
                             <form method="post" action="${pageContext.request.contextPath}/admin/amendes/generer-auto"
                                   onsubmit="return confirm('Générer les amendes du mois pour tous les retardataires ?');">
+                                <input type="hidden" name="_csrf" value="${csrfToken}">
                                 <button type="submit" class="btn btn-warning">
                                     <i class="fas fa-gavel mr-1"></i> Générer les amendes du mois
                                 </button>
@@ -105,6 +106,7 @@
                                             <form action="${pageContext.request.contextPath}/admin/amendes/payer"
                                                   method="post" style="display:inline"
                                                   onsubmit="return confirm('Marquer cette amende comme payée ?');">
+                                                <input type="hidden" name="_csrf" value="${csrfToken}">
                                                 <input type="hidden" name="id" value="${a.id}">
                                                 <button type="submit" class="btn btn-success btn-xs" title="Marquer payée">
                                                     <i class="fas fa-check"></i>
@@ -114,6 +116,7 @@
                                         <form action="${pageContext.request.contextPath}/admin/amendes/delete"
                                               method="post" style="display:inline"
                                               onsubmit="return confirm('Supprimer définitivement cette amende ?');">
+                                            <input type="hidden" name="_csrf" value="${csrfToken}">
                                             <input type="hidden" name="id" value="${a.id}">
                                             <button type="submit" class="btn btn-danger btn-xs" title="Supprimer">
                                                 <i class="fas fa-trash"></i>

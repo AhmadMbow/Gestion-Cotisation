@@ -1,5 +1,6 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" import="java.time.LocalDate" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<c:set var="today" value="<%= java.time.LocalDate.now() %>"/>
 <c:set var="pageTitle" value="${modeEdition ? 'Modifier un membre' : 'Ajouter un membre'}"/>
 <c:set var="activeMenu" value="membres"/>
 
@@ -51,18 +52,21 @@
                       action="${pageContext.request.contextPath}${modeEdition
                               ? '/admin/membres/edit?id='.concat(membre.numero)
                               : '/admin/membres/nouveau'}">
+                    <input type="hidden" name="_csrf" value="${csrfToken}">
                     <div class="card-body">
 
                         <div class="form-row">
                             <div class="form-group col-md-6">
                                 <label for="prenom">Prénom <span class="text-danger">*</span></label>
                                 <input type="text" id="prenom" name="prenom" class="form-control"
-                                       value="${vPrenom}" required maxlength="80">
+                                       value="${vPrenom}" required minlength="2" maxlength="80"
+                                       title="Au moins 2 caractères.">
                             </div>
                             <div class="form-group col-md-6">
                                 <label for="nom">Nom <span class="text-danger">*</span></label>
                                 <input type="text" id="nom" name="nom" class="form-control"
-                                       value="${vNom}" required maxlength="80">
+                                       value="${vNom}" required minlength="2" maxlength="80"
+                                       title="Au moins 2 caractères.">
                             </div>
                         </div>
 
@@ -75,7 +79,8 @@
                             <div class="form-group col-md-3">
                                 <label for="dateNaissance">Date de naissance</label>
                                 <input type="date" id="dateNaissance" name="dateNaissance" class="form-control"
-                                       value="${vDateNaissance}">
+                                       value="${vDateNaissance}" max="${today}"
+                                       title="La date ne peut pas être dans le futur.">
                             </div>
                             <div class="form-group col-md-3">
                                 <label for="role">Rôle</label>
