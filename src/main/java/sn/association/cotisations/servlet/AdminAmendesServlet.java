@@ -1,5 +1,6 @@
 package sn.association.cotisations.servlet;
 
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -31,8 +32,9 @@ import java.math.BigDecimal;
 })
 public class AdminAmendesServlet extends HttpServlet {
 
-    private final AmendeService amendeService = new AmendeService();
-    private final MembreService membreService = new MembreService();
+    @Inject AmendeService amendeService;
+    @Inject MembreService membreService;
+    @Inject sn.association.cotisations.service.ParametreService parametreService;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -41,13 +43,13 @@ public class AdminAmendesServlet extends HttpServlet {
         switch (req.getServletPath()) {
             case "/admin/amendes":
                 req.setAttribute("amendes", amendeService.listerTout());
-                req.setAttribute("montantStandard", AmendeService.MONTANT_STANDARD);
+                req.setAttribute("montantStandard", parametreService.montantAmende());
                 req.getRequestDispatcher("/WEB-INF/views/admin/amendes-list.jsp").forward(req, resp);
                 return;
 
             case "/admin/amendes/nouveau":
                 req.setAttribute("membres", membreService.listerTous());
-                req.setAttribute("montantStandard", AmendeService.MONTANT_STANDARD);
+                req.setAttribute("montantStandard", parametreService.montantAmende());
                 req.getRequestDispatcher("/WEB-INF/views/admin/amende-form.jsp").forward(req, resp);
                 return;
 
@@ -87,7 +89,7 @@ public class AdminAmendesServlet extends HttpServlet {
         } catch (IllegalArgumentException e) {
             req.setAttribute("erreur", e.getMessage());
             req.setAttribute("membres", membreService.listerTous());
-            req.setAttribute("montantStandard", AmendeService.MONTANT_STANDARD);
+            req.setAttribute("montantStandard", parametreService.montantAmende());
             req.getRequestDispatcher("/WEB-INF/views/admin/amende-form.jsp").forward(req, resp);
         }
     }

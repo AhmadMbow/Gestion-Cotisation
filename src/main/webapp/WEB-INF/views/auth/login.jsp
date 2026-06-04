@@ -75,7 +75,8 @@
                             <div class="d-grid mt-4">
                                 <button class="btn btn-primary waves-effect waves-light" type="submit">Connexion</button>
                             </div>
-                        </form>
+                        <input type="hidden" name="_csrf" value="${csrfToken}"/>
+</form>
                     </div>
                 </div>
                 <div class="mt-4 text-center">

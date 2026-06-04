@@ -44,7 +44,8 @@
                     <button type="submit" class="btn btn-warning">
                         <i class="fas fa-paper-plane me-1"></i> Envoyer les rappels par email
                     </button>
-                </form>
+                <input type="hidden" name="_csrf" value="${csrfToken}"/>
+</form>
             </div>
         </div>
 

@@ -79,7 +79,8 @@
                                     <button type="submit" class="btn btn-success btn-sm">
                                         <i class="fas fa-credit-card me-1"></i> Payer
                                     </button>
-                                </form>
+                                <input type="hidden" name="_csrf" value="${csrfToken}"/>
+</form>
                             </c:if>
                         </td>
                     </tr>

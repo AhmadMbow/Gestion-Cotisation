@@ -1,5 +1,7 @@
 package sn.association.cotisations.service;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import sn.association.cotisations.dao.MembreDAO;
 import sn.association.cotisations.entity.Membre;
 import sn.association.cotisations.entity.StatutMembre;
@@ -7,17 +9,10 @@ import sn.association.cotisations.util.PasswordUtil;
 
 import java.util.Optional;
 
+@ApplicationScoped
 public class AuthService {
 
-    private final MembreDAO membreDAO;
-
-    public AuthService() {
-        this.membreDAO = new MembreDAO();
-    }
-
-    public AuthService(MembreDAO membreDAO) {
-        this.membreDAO = membreDAO;
-    }
+    @Inject MembreDAO membreDAO;
 
     /**
      * Authentifie un membre par email + mot de passe.

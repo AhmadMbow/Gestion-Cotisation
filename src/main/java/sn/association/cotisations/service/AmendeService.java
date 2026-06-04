@@ -1,5 +1,7 @@
 package sn.association.cotisations.service;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import sn.association.cotisations.dao.AmendeDAO;
 import sn.association.cotisations.dao.MembreDAO;
 import sn.association.cotisations.entity.Amende;
@@ -10,14 +12,16 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+@ApplicationScoped
 public class AmendeService {
 
     /** Montant standard d'une amende pour retard de cotisation, en FCFA. */
     public static final BigDecimal MONTANT_STANDARD = new BigDecimal("2000");
 
-    private final AmendeDAO amendeDAO = new AmendeDAO();
-    private final MembreDAO membreDAO = new MembreDAO();
-    private final CotisationService cotisationService = new CotisationService();
+    @Inject AmendeDAO amendeDAO;
+    @Inject MembreDAO membreDAO;
+    @Inject CotisationService cotisationService;
+    @Inject ParametreService parametreService;
 
     public List<Amende> listerTout() {
         return amendeDAO.findAll();
@@ -67,7 +71,7 @@ public class AmendeService {
 
             Amende a = new Amende();
             a.setMembre(m);
-            a.setMontant(MONTANT_STANDARD);
+            a.setMontant(parametreService.montantAmende());
             a.setDateGeneration(now);
             a.setStatutPaiement(StatutAmende.IMPAYEE);
             amendeDAO.save(a);

@@ -1,5 +1,6 @@
 package sn.association.cotisations.servlet;
 
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -30,9 +31,9 @@ public class ExportServlet extends HttpServlet {
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    private final MembreDAO membreDAO = new MembreDAO();
-    private final CotisationDAO cotisationDAO = new CotisationDAO();
-    private final AmendeDAO amendeDAO = new AmendeDAO();
+    @Inject MembreDAO membreDAO;
+    @Inject CotisationDAO cotisationDAO;
+    @Inject AmendeDAO amendeDAO;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)

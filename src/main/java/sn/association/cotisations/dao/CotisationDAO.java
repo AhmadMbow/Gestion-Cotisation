@@ -1,5 +1,6 @@
 package sn.association.cotisations.dao;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import sn.association.cotisations.entity.Cotisation;
 import sn.association.cotisations.entity.StatutCotisation;
@@ -10,6 +11,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+@ApplicationScoped
 public class CotisationDAO {
 
     public Optional<Cotisation> findById(Integer id) {

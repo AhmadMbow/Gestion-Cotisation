@@ -1,5 +1,6 @@
 package sn.association.cotisations.dao;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
@@ -10,6 +11,7 @@ import sn.association.cotisations.util.JPAUtil;
 import java.util.List;
 import java.util.Optional;
 
+@ApplicationScoped
 public class MembreDAO {
 
     public Optional<Membre> findByEmail(String email) {

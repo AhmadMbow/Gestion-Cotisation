@@ -13,6 +13,7 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -39,7 +40,7 @@ public class RecuServlet extends HttpServlet {
 
     private static final NumberFormat MONEY = NumberFormat.getNumberInstance(Locale.FRANCE);
 
-    private final CotisationService cotisationService = new CotisationService();
+    @Inject CotisationService cotisationService;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)

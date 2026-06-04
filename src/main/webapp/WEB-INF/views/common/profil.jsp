@@ -82,7 +82,8 @@
                         <i class="fas fa-save me-1"></i> Enregistrer
                     </button>
                 </div>
-            </form>
+            <input type="hidden" name="_csrf" value="${csrfToken}"/>
+</form>
         </div>
     </div>
 
@@ -118,7 +119,8 @@
                         <i class="fas fa-shield-alt me-1"></i> Modifier le mot de passe
                     </button>
                 </div>
-            </form>
+            <input type="hidden" name="_csrf" value="${csrfToken}"/>
+</form>
         </div>
     </div>
 </div>

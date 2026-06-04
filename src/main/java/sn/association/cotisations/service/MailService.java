@@ -1,5 +1,6 @@
 package sn.association.cotisations.service;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.mail.Authenticator;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
@@ -27,6 +28,7 @@ import java.util.Properties;
  *
  * Si SMTP_HOST est absent, les emails sont écrits dans les logs (mode dev).
  */
+@ApplicationScoped
 public class MailService {
 
     private static final Logger log = LoggerFactory.getLogger(MailService.class);

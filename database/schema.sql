@@ -30,7 +30,8 @@ CREATE TABLE IF NOT EXISTS cotisation (
     annee           INT NOT NULL,
     mode_paiement   ENUM('ESPECES','VIREMENT','WAVE','ORANGE_MONEY','FREE_MONEY') NOT NULL,
     statut          ENUM('PAYE','EN_ATTENTE','ANNULE') NOT NULL DEFAULT 'PAYE',
-    CONSTRAINT fk_cotisation_membre FOREIGN KEY (membre_numero) REFERENCES membre(numero) ON DELETE CASCADE
+    CONSTRAINT fk_cotisation_membre FOREIGN KEY (membre_numero) REFERENCES membre(numero) ON DELETE CASCADE,
+    CONSTRAINT uk_cotisation_periode UNIQUE (membre_numero, mois, annee)
 ) ENGINE=InnoDB;
 
 -- ---------- Table AMENDE ----------
@@ -41,6 +42,16 @@ CREATE TABLE IF NOT EXISTS amende (
     date_generation DATE NOT NULL,
     statut_paiement ENUM('PAYEE','IMPAYEE') NOT NULL DEFAULT 'IMPAYEE',
     CONSTRAINT fk_amende_membre FOREIGN KEY (membre_numero) REFERENCES membre(numero) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ---------- Table PASSWORD_RESET_TOKEN ----------
+CREATE TABLE IF NOT EXISTS password_reset_token (
+    id              INT AUTO_INCREMENT PRIMARY KEY,
+    membre_numero   INT NOT NULL,
+    token           VARCHAR(80) NOT NULL UNIQUE,
+    expire_at       DATETIME NOT NULL,
+    used_at         DATETIME,
+    CONSTRAINT fk_prt_membre FOREIGN KEY (membre_numero) REFERENCES membre(numero) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
 -- ---------- Table CONNEXION (historique d'authentification) ----------

@@ -55,7 +55,8 @@
                                     <i class="fas fa-paper-plane me-1"></i> Envoyer
                                 </button>
                             </div>
-                        </form>
+                        <input type="hidden" name="_csrf" value="${csrfToken}"/>
+</form>
 
                         <div class="mt-4 text-center">
                             <a href="${ctx}/login" class="text-muted">

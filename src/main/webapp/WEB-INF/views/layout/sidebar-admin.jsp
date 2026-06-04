@@ -68,6 +68,18 @@
                         <span>Historique connexions</span>
                     </a>
                 </li>
+                <li>
+                    <a href="${ctx}/admin/backup" class="waves-effect">
+                        <i class="fas fa-database"></i>
+                        <span>Sauvegarde SQL</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="${ctx}/admin/parametres" class="waves-effect ${activeMenu == 'parametres' ? 'mm-active' : ''}">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>Paramètres</span>
+                    </a>
+                </li>
 
                 <li class="menu-title">Compte</li>
 

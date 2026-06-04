@@ -1,11 +1,13 @@
 package sn.association.cotisations.dao;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import sn.association.cotisations.entity.Connexion;
 import sn.association.cotisations.util.JPAUtil;
 
 import java.util.List;
 
+@ApplicationScoped
 public class ConnexionDAO {
 
     public Connexion save(Connexion c) {
@@ -18,6 +20,18 @@ public class ConnexionDAO {
         } catch (RuntimeException e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();
             throw e;
+        } finally {
+            em.close();
+        }
+    }
+
+    public List<Connexion> findAll() {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery(
+                    "SELECT c FROM Connexion c JOIN FETCH c.membre " +
+                    "ORDER BY c.id", Connexion.class)
+                    .getResultList();
         } finally {
             em.close();
         }

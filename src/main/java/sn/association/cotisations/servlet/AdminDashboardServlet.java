@@ -1,5 +1,6 @@
 package sn.association.cotisations.servlet;
 
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -20,10 +21,10 @@ import java.util.Map;
 @WebServlet(name = "AdminDashboardServlet", urlPatterns = {"/admin/dashboard"})
 public class AdminDashboardServlet extends HttpServlet {
 
-    private final MembreDAO membreDAO = new MembreDAO();
-    private final CotisationDAO cotisationDAO = new CotisationDAO();
-    private final AmendeDAO amendeDAO = new AmendeDAO();
-    private final RapportService rapportService = new RapportService();
+    @Inject MembreDAO membreDAO;
+    @Inject CotisationDAO cotisationDAO;
+    @Inject AmendeDAO amendeDAO;
+    @Inject RapportService rapportService;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)

@@ -40,7 +40,8 @@
                     <button type="submit" class="btn btn-warning">
                         <i class="fas fa-gavel me-1"></i> Générer les amendes du mois
                     </button>
-                </form>
+                <input type="hidden" name="_csrf" value="${csrfToken}"/>
+</form>
             </div>
         </div>
     </div>
@@ -103,7 +104,8 @@
                                     <button type="submit" class="btn btn-success btn-sm" title="Marquer payée">
                                         <i class="fas fa-check"></i>
                                     </button>
-                                </form>
+                                <input type="hidden" name="_csrf" value="${csrfToken}"/>
+</form>
                             </c:if>
                             <form action="${ctx}/admin/amendes/delete"
                                   method="post" style="display:inline"
@@ -112,7 +114,8 @@
                                 <button type="submit" class="btn btn-danger btn-sm" title="Supprimer">
                                     <i class="fas fa-trash"></i>
                                 </button>
-                            </form>
+                            <input type="hidden" name="_csrf" value="${csrfToken}"/>
+</form>
                         </td>
                     </tr>
                 </c:forEach>

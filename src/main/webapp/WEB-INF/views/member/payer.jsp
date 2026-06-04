@@ -93,7 +93,8 @@
                         <i class="fas fa-times me-1"></i> Annuler
                     </a>
                 </div>
-            </form>
+            <input type="hidden" name="_csrf" value="${csrfToken}"/>
+</form>
         </div>
     </div>
 

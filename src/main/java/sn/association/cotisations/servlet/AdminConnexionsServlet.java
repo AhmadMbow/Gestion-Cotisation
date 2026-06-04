@@ -1,5 +1,6 @@
 package sn.association.cotisations.servlet;
 
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -17,7 +18,7 @@ public class AdminConnexionsServlet extends HttpServlet {
 
     private static final int MAX = 200;
 
-    private final ConnexionDAO connexionDAO = new ConnexionDAO();
+    @Inject ConnexionDAO connexionDAO;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)

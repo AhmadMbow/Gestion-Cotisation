@@ -1,5 +1,6 @@
 package sn.association.cotisations.servlet;
 
+import jakarta.inject.Inject;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -29,7 +30,8 @@ import java.util.List;
 })
 public class MembreCotisationsServlet extends HttpServlet {
 
-    private final CotisationService cotisationService = new CotisationService();
+    @Inject CotisationService cotisationService;
+    @Inject sn.association.cotisations.service.ParametreService parametreService;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -59,7 +61,7 @@ public class MembreCotisationsServlet extends HttpServlet {
                 req.setAttribute("moisDefaut", moisDefaut);
                 req.setAttribute("anneeDefaut", anneeDefaut);
                 req.setAttribute("moisDus", moisDus);
-                req.setAttribute("montantParDefaut", CotisationService.MONTANT_PAR_DEFAUT);
+                req.setAttribute("montantParDefaut", parametreService.montantCotisation());
                 req.getRequestDispatcher("/WEB-INF/views/member/payer.jsp").forward(req, resp);
                 return;
 
@@ -105,7 +107,7 @@ public class MembreCotisationsServlet extends HttpServlet {
             req.setAttribute("moisDefaut", now.getMonthValue());
             req.setAttribute("anneeDefaut", now.getYear());
             req.setAttribute("moisDus", moisDus);
-            req.setAttribute("montantParDefaut", CotisationService.MONTANT_PAR_DEFAUT);
+            req.setAttribute("montantParDefaut", parametreService.montantCotisation());
             req.getRequestDispatcher("/WEB-INF/views/member/payer.jsp").forward(req, resp);
         }
     }

@@ -85,7 +85,8 @@
                                         title="${m.statut == 'ACTIF' ? 'Désactiver' : 'Activer'}">
                                     <i class="fas ${m.statut == 'ACTIF' ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>
                                 </button>
-                            </form>
+                            <input type="hidden" name="_csrf" value="${csrfToken}"/>
+</form>
                             <c:if test="${m.numero != sessionScope.user.numero}">
                                 <form action="${ctx}/admin/membres/delete"
                                       method="post" style="display:inline"
@@ -94,7 +95,8 @@
                                     <button type="submit" class="btn btn-danger btn-sm" title="Supprimer">
                                         <i class="fas fa-trash"></i>
                                     </button>
-                                </form>
+                                <input type="hidden" name="_csrf" value="${csrfToken}"/>
+</form>
                             </c:if>
                         </td>
                     </tr>
