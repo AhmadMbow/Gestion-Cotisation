@@ -46,7 +46,7 @@
                             Montant de la cotisation mensuelle (FCFA) <span class="text-danger">*</span>
                         </label>
                         <input type="number" id="montantCotisation" name="montantCotisation"
-                               class="form-control" min="1" step="100"
+                               class="form-control" min="1" step="1"
                                value="${parametre.montantCotisation}" required>
                         <small class="form-text text-muted">
                             Sert de montant par défaut lors des paiements et au calcul du montant dû par les retardataires.
@@ -58,7 +58,7 @@
                             Montant d'une amende de retard (FCFA) <span class="text-danger">*</span>
                         </label>
                         <input type="number" id="montantAmende" name="montantAmende"
-                               class="form-control" min="0" step="100"
+                               class="form-control" min="0" step="1"
                                value="${parametre.montantAmende}" required>
                         <small class="form-text text-muted">
                             Appliqué lors de la génération automatique des amendes du mois.
