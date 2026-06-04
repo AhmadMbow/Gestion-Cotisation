@@ -2,7 +2,7 @@
 
 Application Web Jakarta EE pour la gestion des **membres**, **cotisations mensuelles** et **amendes** d'une association.
 
-Template UI : **AdminLTE 3.2.0** (Bootstrap 4, MIT License) — déjà intégré dans `src/main/webapp/assets/`.
+Template UI : **Upzet** (Bootstrap 5) — intégré dans `src/main/webapp/assets/upzet/`. Les icônes utilisent Font Awesome (`src/main/webapp/assets/plugins/fontawesome-free/`).
 
 ---
 
@@ -10,7 +10,7 @@ Template UI : **AdminLTE 3.2.0** (Bootstrap 4, MIT License) — déjà intégré
 
 | Couche        | Technologie                                              |
 |---------------|----------------------------------------------------------|
-| Présentation  | JSP / JSTL 3.0, AdminLTE 3 (Bootstrap 4), Chart.js       |
+| Présentation  | JSP / JSTL 3.0, Upzet (Bootstrap 5), Chart.js            |
 | Métier        | Servlets Jakarta EE 10, services CDI                     |
 | Persistance   | JPA 3.1 / Hibernate 6                                    |
 | Base          | MySQL 8                                                  |

@@ -9,13 +9,13 @@
 
 <c:if test="${not empty flashSuccess}">
     <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <button type="button" class="close" data-dismiss="alert">&times;</button>
-        <i class="fas fa-check-circle mr-1"></i> ${flashSuccess}
+        <i class="fas fa-check-circle me-1"></i> ${flashSuccess}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 </c:if>
 <c:if test="${not empty flashError}">
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <button type="button" class="close" data-dismiss="alert">&times;</button>
-        <i class="fas fa-exclamation-circle mr-1"></i> ${flashError}
+        <i class="fas fa-exclamation-circle me-1"></i> ${flashError}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 </c:if>

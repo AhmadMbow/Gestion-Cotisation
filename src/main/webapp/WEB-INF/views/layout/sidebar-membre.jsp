@@ -1,74 +1,64 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<c:set var="ctx" value="${pageContext.request.contextPath}"/>
 
-<aside class="main-sidebar sidebar-dark-primary elevation-4">
-    <a href="${pageContext.request.contextPath}/membre/dashboard" class="brand-link">
-        <i class="fas fa-user-circle brand-image ml-3" style="opacity:.9"></i>
-        <span class="brand-text font-weight-light">Espace <b>Membre</b></span>
-    </a>
+<!-- ===== Sidebar membre ===== -->
+<div class="vertical-menu">
+    <div data-simplebar class="h-100">
+        <div id="sidebar-menu">
+            <ul class="metismenu list-unstyled" id="side-menu">
 
-    <div class="sidebar">
-        <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-            <div class="image">
-                <i class="fas fa-user fa-2x text-white"></i>
-            </div>
-            <div class="info">
-                <a href="#" class="d-block">${sessionScope.user.prenom} ${sessionScope.user.nom}</a>
-                <small class="text-success"><i class="fas fa-circle text-success"></i> En ligne</small>
-            </div>
-        </div>
+                <li class="menu-title">Espace Membre</li>
 
-        <nav class="mt-2">
-            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-
-                <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/membre/dashboard"
-                       class="nav-link ${activeMenu == 'dashboard' ? 'active' : ''}">
-                        <i class="nav-icon fas fa-tachometer-alt"></i>
-                        <p>Mon tableau de bord</p>
+                <li>
+                    <a href="${ctx}/membre/dashboard" class="waves-effect ${activeMenu == 'dashboard' ? 'mm-active' : ''}">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Mon tableau de bord</span>
                     </a>
                 </li>
 
-                <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/membre/cotisations"
-                       class="nav-link ${activeMenu == 'cotisations' ? 'active' : ''}">
-                        <i class="nav-icon fas fa-money-check-alt"></i>
-                        <p>Mes cotisations</p>
+                <li>
+                    <a href="${ctx}/membre/cotisations" class="waves-effect ${activeMenu == 'cotisations' ? 'mm-active' : ''}">
+                        <i class="fas fa-money-check-alt"></i>
+                        <span>Mes cotisations</span>
                     </a>
                 </li>
 
-                <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/membre/payer"
-                       class="nav-link ${activeMenu == 'payer' ? 'active' : ''}">
-                        <i class="nav-icon fas fa-credit-card text-success"></i>
-                        <p>Effectuer un paiement</p>
+                <li>
+                    <a href="${ctx}/membre/payer" class="waves-effect ${activeMenu == 'payer' ? 'mm-active' : ''}">
+                        <i class="fas fa-credit-card"></i>
+                        <span>Effectuer un paiement</span>
                     </a>
                 </li>
 
-                <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/membre/amendes"
-                       class="nav-link ${activeMenu == 'amendes' ? 'active' : ''}">
-                        <i class="nav-icon fas fa-gavel"></i>
-                        <p>Mes amendes</p>
+                <li>
+                    <a href="${ctx}/membre/amendes" class="waves-effect ${activeMenu == 'amendes' ? 'mm-active' : ''}">
+                        <i class="fas fa-gavel"></i>
+                        <span>Mes amendes</span>
                     </a>
                 </li>
 
-                <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/profil"
-                       class="nav-link ${activeMenu == 'profil' ? 'active' : ''}">
-                        <i class="nav-icon fas fa-id-card"></i>
-                        <p>Mon profil</p>
+                <li class="menu-title">Compte</li>
+
+                <li>
+                    <a href="${ctx}/profil" class="waves-effect ${activeMenu == 'profil' ? 'mm-active' : ''}">
+                        <i class="fas fa-id-card"></i>
+                        <span>Mon profil</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="${ctx}/logout" class="waves-effect">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Déconnexion</span>
                     </a>
                 </li>
 
-                <li class="nav-header">COMPTE</li>
-                <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/logout" class="nav-link">
-                        <i class="nav-icon fas fa-sign-out-alt"></i>
-                        <p>Déconnexion</p>
-                    </a>
-                </li>
             </ul>
-        </nav>
+        </div>
     </div>
-</aside>
+</div>
+
+<!-- ===== Début du contenu principal ===== -->
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">

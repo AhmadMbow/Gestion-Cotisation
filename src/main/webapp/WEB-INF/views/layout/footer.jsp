@@ -1,27 +1,44 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<c:set var="ctx" value="${pageContext.request.contextPath}"/>
 
-    <footer class="main-footer">
-        <strong>Copyright &copy; 2026
-            <a href="#">Gestion Cotisations Association</a>.
-        </strong>
-        Tous droits réservés.
-        <div class="float-right d-none d-sm-inline-block">
-            <b>Version</b> 1.0.0
+        </div><!-- container-fluid -->
+    </div><!-- page-content -->
+
+    <!-- ===== Footer ===== -->
+    <footer class="footer">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-6">
+                    <script>document.write(new Date().getFullYear())</script> &copy; Gestion Cotisations Association.
+                </div>
+                <div class="col-sm-6">
+                    <div class="text-sm-end d-none d-sm-block">Version 1.0.0</div>
+                </div>
+            </div>
         </div>
     </footer>
-</div>
-<!-- ./wrapper -->
+</div><!-- main-content -->
+</div><!-- layout-wrapper -->
 
-<script src="${pageContext.request.contextPath}/assets/plugins/jquery/jquery.min.js"></script>
-<script src="${pageContext.request.contextPath}/assets/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
-<script src="${pageContext.request.contextPath}/assets/plugins/datatables/jquery.dataTables.min.js"></script>
-<script src="${pageContext.request.contextPath}/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
-<script src="${pageContext.request.contextPath}/assets/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
-<script src="${pageContext.request.contextPath}/assets/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
-<script src="${pageContext.request.contextPath}/assets/plugins/chart.js/Chart.min.js"></script>
-<script src="${pageContext.request.contextPath}/assets/plugins/sweetalert2/sweetalert2.min.js"></script>
-<script src="${pageContext.request.contextPath}/assets/plugins/toastr/toastr.min.js"></script>
-<script src="${pageContext.request.contextPath}/assets/dist/js/adminlte.min.js"></script>
+<!-- ===== JavaScript ===== -->
+<script src="${ctx}/assets/upzet/libs/jquery/jquery.min.js"></script>
+<script src="${ctx}/assets/upzet/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="${ctx}/assets/upzet/libs/metismenu/metisMenu.min.js"></script>
+<script src="${ctx}/assets/upzet/libs/simplebar/simplebar.min.js"></script>
+<script src="${ctx}/assets/upzet/libs/node-waves/waves.min.js"></script>
+
+<!-- Chart.js -->
+<script src="${ctx}/assets/upzet/libs/chart.js/chart.umd.js"></script>
+
+<!-- DataTables -->
+<script src="${ctx}/assets/upzet/libs/datatables.net/js/jquery.dataTables.min.js"></script>
+<script src="${ctx}/assets/upzet/libs/datatables.net-bs4/js/dataTables.bootstrap4.min.js"></script>
+<script src="${ctx}/assets/upzet/libs/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
+<script src="${ctx}/assets/upzet/libs/datatables.net-responsive-bs4/js/responsive.bootstrap4.min.js"></script>
+
+<!-- App (init sidebar / metismenu / waves) -->
+<script src="${ctx}/assets/upzet/js/app.js"></script>
 
 <script>
     $(function () {
@@ -34,6 +51,27 @@
             });
         }
     });
+
+    // ===== Bascule mode clair / sombre =====
+    (function () {
+        var html = document.documentElement;
+        var btn = document.getElementById('dark-toggle');
+        function refreshIcon() {
+            if (!btn) return;
+            var dark = html.getAttribute('data-bs-theme') === 'dark';
+            btn.querySelector('i').className = (dark ? 'fas fa-sun' : 'fas fa-moon') + ' font-size-18';
+        }
+        refreshIcon();
+        if (btn) {
+            btn.addEventListener('click', function () {
+                var next = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+                if (next === 'dark') html.setAttribute('data-bs-theme', 'dark');
+                else html.removeAttribute('data-bs-theme');
+                try { localStorage.setItem('theme', next); } catch (e) {}
+                refreshIcon();
+            });
+        }
+    })();
 </script>
 
 </body>

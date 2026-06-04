@@ -1,121 +1,95 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
+<c:set var="ctx" value="${pageContext.request.contextPath}"/>
 
-<aside class="main-sidebar sidebar-dark-primary elevation-4">
-    <a href="${pageContext.request.contextPath}/admin/dashboard" class="brand-link">
-        <i class="fas fa-hand-holding-usd brand-image ml-3" style="opacity:.9"></i>
-        <span class="brand-text font-weight-light">Cotisations <b>Admin</b></span>
-    </a>
+<!-- ===== Sidebar ===== -->
+<div class="vertical-menu">
+    <div data-simplebar class="h-100">
+        <div id="sidebar-menu">
+            <ul class="metismenu list-unstyled" id="side-menu">
 
-    <div class="sidebar">
-        <div class="user-panel mt-3 pb-3 mb-3 d-flex">
-            <div class="image">
-                <i class="fas fa-user-shield fa-2x text-white"></i>
-            </div>
-            <div class="info">
-                <a href="#" class="d-block">${sessionScope.user.prenom} ${sessionScope.user.nom}</a>
-                <small class="text-success"><i class="fas fa-circle text-success"></i> En ligne</small>
-            </div>
-        </div>
+                <li class="menu-title">Menu</li>
 
-        <nav class="mt-2">
-            <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
-
-                <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/admin/dashboard"
-                       class="nav-link ${activeMenu == 'dashboard' ? 'active' : ''}">
-                        <i class="nav-icon fas fa-tachometer-alt"></i>
-                        <p>Tableau de bord</p>
+                <li>
+                    <a href="${ctx}/admin/dashboard" class="waves-effect ${activeMenu == 'dashboard' ? 'mm-active' : ''}">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <span>Tableau de bord</span>
                     </a>
                 </li>
 
-                <li class="nav-header">GESTION</li>
+                <li class="menu-title">Gestion</li>
 
-                <li class="nav-item ${activeMenu == 'membres' ? 'menu-open' : ''}">
-                    <a href="#" class="nav-link ${activeMenu == 'membres' ? 'active' : ''}">
-                        <i class="nav-icon fas fa-users"></i>
-                        <p>Membres <i class="right fas fa-angle-left"></i></p>
+                <li>
+                    <a href="javascript: void(0);" class="has-arrow waves-effect ${activeMenu == 'membres' ? 'mm-active' : ''}">
+                        <i class="fas fa-users"></i>
+                        <span>Membres</span>
                     </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="${pageContext.request.contextPath}/admin/membres" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i><p>Liste des membres</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="${pageContext.request.contextPath}/admin/membres/nouveau" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i><p>Ajouter un membre</p>
-                            </a>
-                        </li>
+                    <ul class="sub-menu ${activeMenu == 'membres' ? 'mm-show' : ''}" aria-expanded="${activeMenu == 'membres'}">
+                        <li><a href="${ctx}/admin/membres">Liste des membres</a></li>
+                        <li><a href="${ctx}/admin/membres/nouveau">Ajouter un membre</a></li>
                     </ul>
                 </li>
 
-                <li class="nav-item ${activeMenu == 'cotisations' ? 'menu-open' : ''}">
-                    <a href="#" class="nav-link ${activeMenu == 'cotisations' ? 'active' : ''}">
-                        <i class="nav-icon fas fa-money-check-alt"></i>
-                        <p>Cotisations <i class="right fas fa-angle-left"></i></p>
+                <li>
+                    <a href="javascript: void(0);" class="has-arrow waves-effect ${activeMenu == 'cotisations' ? 'mm-active' : ''}">
+                        <i class="fas fa-money-check-alt"></i>
+                        <span>Cotisations</span>
                     </a>
-                    <ul class="nav nav-treeview">
-                        <li class="nav-item">
-                            <a href="${pageContext.request.contextPath}/admin/cotisations" class="nav-link">
-                                <i class="far fa-circle nav-icon"></i><p>Toutes les cotisations</p>
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="${pageContext.request.contextPath}/admin/cotisations/retards" class="nav-link">
-                                <i class="far fa-circle nav-icon text-warning"></i><p>Membres en retard</p>
-                            </a>
-                        </li>
+                    <ul class="sub-menu ${activeMenu == 'cotisations' ? 'mm-show' : ''}" aria-expanded="${activeMenu == 'cotisations'}">
+                        <li><a href="${ctx}/admin/cotisations">Toutes les cotisations</a></li>
+                        <li><a href="${ctx}/admin/cotisations/retards">Membres en retard</a></li>
                     </ul>
                 </li>
 
-                <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/admin/amendes"
-                       class="nav-link ${activeMenu == 'amendes' ? 'active' : ''}">
-                        <i class="nav-icon fas fa-gavel"></i>
-                        <p>Amendes</p>
+                <li>
+                    <a href="${ctx}/admin/amendes" class="waves-effect ${activeMenu == 'amendes' ? 'mm-active' : ''}">
+                        <i class="fas fa-gavel"></i>
+                        <span>Amendes</span>
                     </a>
                 </li>
 
-                <li class="nav-header">RAPPORTS</li>
+                <li class="menu-title">Rapports</li>
 
-                <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/admin/rapports"
-                       class="nav-link ${activeMenu == 'rapports' ? 'active' : ''}">
-                        <i class="nav-icon fas fa-chart-bar"></i>
-                        <p>Statistiques</p>
+                <li>
+                    <a href="${ctx}/admin/rapports" class="waves-effect ${activeMenu == 'rapports' ? 'mm-active' : ''}">
+                        <i class="fas fa-chart-bar"></i>
+                        <span>Statistiques</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/admin/exports"
-                       class="nav-link ${activeMenu == 'exports' ? 'active' : ''}">
-                        <i class="nav-icon fas fa-file-export"></i>
-                        <p>Export PDF / Excel</p>
+                <li>
+                    <a href="${ctx}/admin/exports" class="waves-effect ${activeMenu == 'exports' ? 'mm-active' : ''}">
+                        <i class="fas fa-file-export"></i>
+                        <span>Export PDF / Excel</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/admin/connexions"
-                       class="nav-link ${activeMenu == 'connexions' ? 'active' : ''}">
-                        <i class="nav-icon fas fa-history"></i>
-                        <p>Historique connexions</p>
+                <li>
+                    <a href="${ctx}/admin/connexions" class="waves-effect ${activeMenu == 'connexions' ? 'mm-active' : ''}">
+                        <i class="fas fa-history"></i>
+                        <span>Historique connexions</span>
                     </a>
                 </li>
 
-                <li class="nav-header">COMPTE</li>
-                <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/profil"
-                       class="nav-link ${activeMenu == 'profil' ? 'active' : ''}">
-                        <i class="nav-icon fas fa-id-card"></i>
-                        <p>Mon profil</p>
+                <li class="menu-title">Compte</li>
+
+                <li>
+                    <a href="${ctx}/profil" class="waves-effect ${activeMenu == 'profil' ? 'mm-active' : ''}">
+                        <i class="fas fa-id-card"></i>
+                        <span>Mon profil</span>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a href="${pageContext.request.contextPath}/logout" class="nav-link">
-                        <i class="nav-icon fas fa-sign-out-alt"></i>
-                        <p>Déconnexion</p>
+                <li>
+                    <a href="${ctx}/logout" class="waves-effect">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Déconnexion</span>
                     </a>
                 </li>
+
             </ul>
-        </nav>
+        </div>
     </div>
-</aside>
+</div>
+
+<!-- ===== Début du contenu principal ===== -->
+<div class="main-content">
+    <div class="page-content">
+        <div class="container-fluid">
