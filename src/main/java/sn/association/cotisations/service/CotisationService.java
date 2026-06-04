@@ -25,6 +25,7 @@ public class CotisationService {
 
     @Inject CotisationDAO cotisationDAO = new CotisationDAO();
     @Inject MembreDAO membreDAO = new MembreDAO();
+    @Inject ParametreService parametreService;
 
     public List<Cotisation> listerTout() {
         return cotisationDAO.findAll();
@@ -109,6 +110,11 @@ public class CotisationService {
      */
     public BigDecimal montantTotalDu(Membre m) {
         int n = moisDusParMembre(m).size();
-        return MONTANT_PAR_DEFAUT.multiply(BigDecimal.valueOf(n));
+        return parametreService.montantCotisation().multiply(BigDecimal.valueOf(n));
+    }
+
+    /** Montant standard de la cotisation, configurable par l'admin (anciennement MONTANT_PAR_DEFAUT). */
+    public BigDecimal montantParDefaut() {
+        return parametreService.montantCotisation();
     }
 }

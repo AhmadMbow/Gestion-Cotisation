@@ -107,6 +107,13 @@
                         <p>Sauvegarde SQL</p>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="${pageContext.request.contextPath}/admin/parametres"
+                       class="nav-link ${activeMenu == 'parametres' ? 'active' : ''}">
+                        <i class="nav-icon fas fa-sliders-h"></i>
+                        <p>Paramètres</p>
+                    </a>
+                </li>
 
                 <li class="nav-header">COMPTE</li>
                 <li class="nav-item">

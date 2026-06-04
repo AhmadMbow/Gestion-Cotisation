@@ -21,6 +21,7 @@ public class AmendeService {
     @Inject AmendeDAO amendeDAO;
     @Inject MembreDAO membreDAO;
     @Inject CotisationService cotisationService;
+    @Inject ParametreService parametreService;
 
     public List<Amende> listerTout() {
         return amendeDAO.findAll();
@@ -70,7 +71,7 @@ public class AmendeService {
 
             Amende a = new Amende();
             a.setMembre(m);
-            a.setMontant(MONTANT_STANDARD);
+            a.setMontant(parametreService.montantAmende());
             a.setDateGeneration(now);
             a.setStatutPaiement(StatutAmende.IMPAYEE);
             amendeDAO.save(a);
