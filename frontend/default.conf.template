@@ -1,6 +1,10 @@
 upstream backend {
-    # "backend" = nom du service Tomcat dans docker-compose.yml
-    server backend:8080;
+    # Adresse du backend, configurable via variables d'environnement :
+    #   BACKEND_HOST (défaut "backend" sous docker-compose)
+    #   BACKEND_PORT (défaut "8080")
+    # L'entrypoint officiel de l'image nginx remplace ${BACKEND_HOST}/${BACKEND_PORT}
+    # au démarrage (envsubst sur /etc/nginx/templates/*.template).
+    server ${BACKEND_HOST}:${BACKEND_PORT};
 }
 
 server {
