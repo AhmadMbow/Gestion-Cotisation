@@ -1,0 +1,61 @@
+# ============================================================
+#  Déploiement PRODUCTION — tire les images publiées sur
+#  Docker Hub (ahmaddock/gestion_cotisation), aucun build local.
+#
+#  Pré-requis sur le serveur :
+#    - Docker + Docker Compose installés
+#    - `docker login` (image privée) avec le compte ahmaddock
+#    - un fichier .env à côté de ce compose (voir .env.example)
+#
+#  Lancement :
+#    docker compose -f docker-compose.prod.yml pull
+#    docker compose -f docker-compose.prod.yml up -d
+# ============================================================
+services:
+  # ---------- 1. BASE DE DONNÉES ----------
+  db:
+    image: ahmaddock/gestion_cotisation:db
+    container_name: cotisations-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD:-}"
+      MYSQL_ALLOW_EMPTY_PASSWORD: "${DB_ALLOW_EMPTY_PASSWORD:-yes}"
+      MYSQL_DATABASE: cotisations_db
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  # ---------- 2. BACKEND (Tomcat + WAR Jakarta EE) ----------
+  backend:
+    image: ahmaddock/gestion_cotisation:backend
+    container_name: cotisations-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+    expose:
+      - "8080"
+
+  # ---------- 3. FRONTEND (Nginx : assets + reverse-proxy) ----------
+  frontend:
+    image: ahmaddock/gestion_cotisation:frontend
+    container_name: cotisations-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${HTTP_PORT:-80}:80"
+
+volumes:
+  mysql_data:
