@@ -1,4 +1,5 @@
-# ---- Stage 1 : build du WAR avec Maven ----
+# ---- Conteneur BACKEND ----
+# Stage 1 : build du WAR avec Maven
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
 
@@ -7,8 +8,8 @@ RUN mvn -B -q dependency:go-offline
 
 COPY src ./src
 
-# Redirige la connexion JDBC vers le service "mysql" du compose
-RUN sed -i 's#jdbc:mysql://localhost:3306/#jdbc:mysql://mysql:3306/#' \
+# Redirige la connexion JDBC vers le service "db" du compose
+RUN sed -i 's#jdbc:mysql://localhost:3306/#jdbc:mysql://db:3306/#' \
     src/main/resources/META-INF/persistence.xml
 
 RUN mvn -B -q clean package -DskipTests

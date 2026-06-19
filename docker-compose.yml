@@ -1,29 +1,32 @@
 services:
-  mysql:
-    image: mysql:8.3
-    container_name: cotisations-mysql
+  # ---------- 1. BASE DE DONNÉES ----------
+  db:
+    build: ./database
+    image: ahmaddock/gestion_cotisation:db
+    container_name: cotisations-db
     restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ""
       MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_DATABASE: cotisations_db
-    # Pas d'exposition du port MySQL vers l'extérieur : l'app y accède via le
-    # réseau interne Docker. (Pour inspecter la base : docker exec cotisations-mysql ...)
+    # Pas d'exposition du port vers l'extérieur : accès via le réseau interne.
+    # (Pour inspecter : docker exec -it cotisations-db mysql -uroot cotisations_db)
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 5s
       timeout: 5s
       retries: 20
 
-  app:
+  # ---------- 2. BACKEND (Tomcat + WAR Jakarta EE) ----------
+  backend:
     build: .
-    container_name: cotisations-app
+    image: ahmaddock/gestion_cotisation:backend
+    container_name: cotisations-backend
     restart: unless-stopped
     depends_on:
-      mysql:
+      db:
         condition: service_healthy
     environment:
       SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
@@ -32,8 +35,22 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM: ${SMTP_FROM:-}
       SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+    # Port interne uniquement : c'est Nginx (frontend) qui expose l'app.
+    expose:
+      - "8080"
+
+  # ---------- 3. FRONTEND (Nginx : assets + reverse-proxy) ----------
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    image: ahmaddock/gestion_cotisation:frontend
+    container_name: cotisations-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
     ports:
-      - "8080:8080"
+      - "8080:80"
 
 volumes:
   mysql_data:
