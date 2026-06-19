@@ -1,0 +1,19 @@
+# Fly.io — service BACKEND (Tomcat 10 + WAR Jakarta EE)
+# Interne uniquement ; joignable via cotisations-backend.internal:8080
+# La connexion BDD est injectée par variables d'env (lues par JPAUtil).
+app = "cotisations-backend"
+primary_region = "cdg"
+
+[env]
+  DB_URL = "jdbc:mysql://cotisations-db.internal:3306/cotisations_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true"
+  DB_USER = "root"
+  # DB_PASSWORD laissé vide (base sans mot de passe sur le réseau privé Fly)
+  # SMTP : à ajouter via `fly secrets set SMTP_PASSWORD=... --app cotisations-backend`
+  SMTP_HOST = "smtp.gmail.com"
+  SMTP_PORT = "587"
+  SMTP_STARTTLS = "true"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "1gb"

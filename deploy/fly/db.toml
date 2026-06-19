@@ -1,0 +1,14 @@
+# Fly.io — service BASE DE DONNÉES (MySQL 8.3 + schéma intégré)
+# Interne uniquement (aucun service public) ; joignable via cotisations-db.internal
+app = "cotisations-db"
+primary_region = "cdg"
+
+# Persistance des données MySQL
+[mounts]
+  source = "mysql_data"
+  destination = "/var/lib/mysql"
+
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "1gb"
