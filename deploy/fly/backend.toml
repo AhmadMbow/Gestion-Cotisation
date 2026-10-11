@@ -8,10 +8,14 @@ primary_region = "cdg"
   DB_URL = "jdbc:mysql://cotisations-db.internal:3306/cotisations_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&createDatabaseIfNotExist=true"
   DB_USER = "root"
   # DB_PASSWORD laissé vide (base sans mot de passe sur le réseau privé Fly)
-  # SMTP : à ajouter via `fly secrets set SMTP_PASSWORD=... --app cotisations-backend`
+  # SMTP_USER, SMTP_FROM et SMTP_PASSWORD : secrets Fly
+  #   fly secrets set SMTP_USER=... SMTP_FROM=... SMTP_PASSWORD=... --app cotisations-backend
   SMTP_HOST = "smtp.gmail.com"
   SMTP_PORT = "587"
   SMTP_STARTTLS = "true"
+  SMTP_FROM_NAME = "Cotisen"
+  # Liens des e-mails (mot de passe, bienvenue) vers le site public
+  APP_BASE_URL = "https://cotisations-frontend.fly.dev"
 
 [[vm]]
   cpu_kind = "shared"

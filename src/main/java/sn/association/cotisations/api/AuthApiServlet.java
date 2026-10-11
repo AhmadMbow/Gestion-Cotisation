@@ -121,7 +121,7 @@ public class AuthApiServlet extends ApiServlet {
     }
 
     /** IP du client (derrière Nginx, transmise dans X-Real-IP). */
-    static String ip(HttpServletRequest req) {
+    public static String ip(HttpServletRequest req) {
         String real = req.getHeader("X-Real-IP");
         return real != null && !real.isBlank() ? real : req.getRemoteAddr();
     }

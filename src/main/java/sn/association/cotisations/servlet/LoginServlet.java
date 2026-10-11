@@ -46,7 +46,7 @@ public class LoginServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
-        String ip = req.getRemoteAddr();
+        String ip = sn.association.cotisations.api.AuthApiServlet.ip(req);
         if (rateLimiter.isBlocked(ip)) {
             long secs = rateLimiter.secondsUntilUnblock(ip);
             req.setAttribute("error",
