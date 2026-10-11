@@ -19,21 +19,14 @@ services:
       # mysql://avnadmin:…@…aivencloud.com:…/defaultdb?ssl-mode=REQUIRED (fourni par Aiven)
       - key: DATABASE_URL
         sync: false
-      # Envoi des e-mails (mot de passe d'application Gmail)
-      - key: SMTP_HOST
-        value: smtp.gmail.com
-      - key: SMTP_PORT
-        value: "587"
-      - key: SMTP_STARTTLS
-        value: "true"
-      - key: SMTP_USER
-        value: papaahmadmbow@gmail.com
+      # Envoi des e-mails par l'API Brevo : l'offre gratuite de Render bloque le SMTP
+      # (ports 25, 465 et 587). Expéditeur à valider dans Brevo.
+      - key: BREVO_API_KEY
+        sync: false
       - key: SMTP_FROM
         value: papaahmadmbow@gmail.com
       - key: SMTP_FROM_NAME
         value: Cotisen
-      - key: SMTP_PASSWORD
-        sync: false
       # Premier administrateur, créé si la base est vide. Mot de passe aléatoire :
       # utiliser « Mot de passe oublié ? » pour choisir le sien (lien reçu par e-mail).
       - key: ADMIN_EMAIL

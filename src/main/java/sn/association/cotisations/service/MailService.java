@@ -15,7 +15,15 @@ import jakarta.mail.internet.MimeMultipart;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.json.Json;
+import jakarta.json.JsonObjectBuilder;
+
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -33,7 +41,11 @@ import java.util.concurrent.Executors;
  *   SMTP_FROM_NAME  (nom affiché, défaut "Cotisen")
  *   SMTP_STARTTLS   ("true"/"false", défaut true)
  *
- * Si SMTP_HOST est absent, les emails sont écrits dans les logs (mode dev).
+ * Ou, si BREVO_API_KEY est défini, envoi par l'API HTTPS de Brevo (hébergeurs
+ * qui bloquent le SMTP, comme l'offre gratuite de Render). L'expéditeur reste
+ * SMTP_FROM / SMTP_FROM_NAME (adresse à valider dans Brevo).
+ *
+ * Sans SMTP_HOST ni BREVO_API_KEY, les emails sont écrits dans les logs (mode dev).
  */
 @ApplicationScoped
 public class MailService {
@@ -47,6 +59,8 @@ public class MailService {
     private final String from = envOrDefault("SMTP_FROM", envOrDefault("SMTP_USER", "no-reply@cotisen.sn"));
     private final String fromName = envOrDefault("SMTP_FROM_NAME", "Cotisen");
     private final boolean starttls = !"false".equalsIgnoreCase(envOrDefault("SMTP_STARTTLS", "true"));
+    private final String brevoKey = System.getenv("BREVO_API_KEY");
+    private final HttpClient http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
 
     /** Envois en arrière-plan : une requête de l'app n'attend jamais le serveur SMTP. */
     private final ExecutorService executor = Executors.newFixedThreadPool(2, r -> {
@@ -56,7 +70,11 @@ public class MailService {
     });
 
     public boolean isConfigured() {
-        return host != null && !host.isBlank();
+        return viaBrevo() || (host != null && !host.isBlank());
+    }
+
+    private boolean viaBrevo() {
+        return brevoKey != null && !brevoKey.isBlank();
     }
 
     /** Email en texte brut (envoi immédiat, erreurs remontées à l'appelant). */
@@ -72,6 +90,10 @@ public class MailService {
         if (!isConfigured()) {
             log.warn("SMTP non configuré — email NON envoyé. Destinataire={}, Sujet={}\n--- Corps ---\n{}\n--- Fin ---",
                     to, subject, text);
+            return;
+        }
+        if (viaBrevo()) {
+            envoyerViaBrevo(to, subject, text, html);
             return;
         }
 
@@ -117,6 +139,36 @@ public class MailService {
 
         Transport.send(msg);
         log.info("Email envoyé à {} ({}).", to, subject);
+    }
+
+    /** API transactionnelle de Brevo (HTTPS, port 443). */
+    private void envoyerViaBrevo(String to, String subject, String text, String html) throws MessagingException {
+        JsonObjectBuilder body = Json.createObjectBuilder()
+                .add("sender", Json.createObjectBuilder().add("name", fromName).add("email", from))
+                .add("to", Json.createArrayBuilder().add(Json.createObjectBuilder().add("email", to)))
+                .add("subject", subject)
+                .add("textContent", text);
+        if (html != null) body.add("htmlContent", html);
+
+        HttpRequest req = HttpRequest.newBuilder(URI.create("https://api.brevo.com/v3/smtp/email"))
+                .timeout(Duration.ofSeconds(20))
+                .header("api-key", brevoKey)
+                .header("Content-Type", "application/json")
+                .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body.build().toString(), StandardCharsets.UTF_8))
+                .build();
+        try {
+            HttpResponse<String> resp = http.send(req, HttpResponse.BodyHandlers.ofString());
+            if (resp.statusCode() / 100 != 2) {
+                throw new MessagingException("Brevo a refusé l'envoi (" + resp.statusCode() + ") : " + resp.body());
+            }
+            log.info("Email envoyé via Brevo à {} ({}).", to, subject);
+        } catch (java.io.IOException e) {
+            throw new MessagingException("Brevo injoignable : " + e.getMessage(), e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new MessagingException("Envoi interrompu", e);
+        }
     }
 
     /** Envoi en arrière-plan ; un échec est seulement journalisé. */
