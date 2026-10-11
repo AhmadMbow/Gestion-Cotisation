@@ -53,6 +53,21 @@ public class ConnexionDAO {
         }
     }
 
+    /** Dernières connexions d'un membre. */
+    public List<Connexion> findByMembre(Integer membreNumero, int limit) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            return em.createQuery(
+                    "SELECT c FROM Connexion c WHERE c.membre.numero = :n " +
+                    "ORDER BY c.dateConnexion DESC", Connexion.class)
+                    .setParameter("n", membreNumero)
+                    .setMaxResults(limit)
+                    .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
     public long count() {
         EntityManager em = JPAUtil.getEntityManager();
         try {

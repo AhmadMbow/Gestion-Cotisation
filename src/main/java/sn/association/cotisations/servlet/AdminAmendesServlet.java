@@ -33,6 +33,7 @@ import java.math.BigDecimal;
 public class AdminAmendesServlet extends HttpServlet {
 
     @Inject AmendeService amendeService;
+    @Inject sn.association.cotisations.service.NotificationService notificationService;
     @Inject MembreService membreService;
     @Inject sn.association.cotisations.service.ParametreService parametreService;
 
@@ -82,6 +83,7 @@ public class AdminAmendesServlet extends HttpServlet {
             BigDecimal montant = new BigDecimal(montantParam);
 
             Amende a = amendeService.generer(membreNumero, montant);
+            notificationService.amendesGenerees(java.util.List.of(a));
             FlashUtil.success(req, "Amende de " + montant + " FCFA générée pour "
                     + a.getMembre().getPrenom() + " " + a.getMembre().getNom() + ".");
             resp.sendRedirect(req.getContextPath() + "/admin/amendes");
@@ -95,7 +97,9 @@ public class AdminAmendesServlet extends HttpServlet {
     }
 
     private void genererAuto(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        int created = amendeService.genererPourRetardsMoisCourant();
+        java.util.List<Amende> creees = amendeService.genererAmendesMoisCourant();
+        notificationService.amendesGenerees(creees);
+        int created = creees.size();
         if (created == 0) {
             FlashUtil.success(req, "Aucune amende à générer : tous les retardataires en ont déjà une ce mois (ou il n'y a pas de retard).");
         } else {
@@ -107,7 +111,10 @@ public class AdminAmendesServlet extends HttpServlet {
     private void marquerPayee(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
             Integer id = Integer.valueOf(req.getParameter("id"));
+            sn.association.cotisations.entity.Membre membre = amendeService.trouver(id).getMembre();
             Amende a = amendeService.marquerPayee(id);
+            notificationService.paiement(membre, java.util.List.of(), java.util.List.of(a),
+                    sn.association.cotisations.entity.ModePaiement.ESPECES, true);
             FlashUtil.success(req, "Amende N°" + a.getId() + " marquée comme payée.");
         } catch (IllegalArgumentException | IllegalStateException e) {
             FlashUtil.error(req, e.getMessage());

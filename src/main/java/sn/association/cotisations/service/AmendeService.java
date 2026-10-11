@@ -6,10 +6,12 @@ import sn.association.cotisations.dao.AmendeDAO;
 import sn.association.cotisations.dao.MembreDAO;
 import sn.association.cotisations.entity.Amende;
 import sn.association.cotisations.entity.Membre;
+import sn.association.cotisations.entity.ModePaiement;
 import sn.association.cotisations.entity.StatutAmende;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @ApplicationScoped
@@ -60,12 +62,20 @@ public class AmendeService {
      * @return le nombre d'amendes effectivement créées.
      */
     public int genererPourRetardsMoisCourant() {
+        return genererAmendesMoisCourant().size();
+    }
+
+    /**
+     * Comme {@link #genererPourRetardsMoisCourant()}, mais renvoie les amendes créées
+     * (pour pouvoir prévenir les membres concernés).
+     */
+    public List<Amende> genererAmendesMoisCourant() {
         LocalDate now = LocalDate.now();
         int mois = now.getMonthValue();
         int annee = now.getYear();
 
         List<Membre> enRetard = cotisationService.membresEnRetardCeMois();
-        int created = 0;
+        List<Amende> creees = new ArrayList<>();
         for (Membre m : enRetard) {
             if (amendeDAO.existsAmendePourMois(m.getNumero(), mois, annee)) continue;
 
@@ -74,21 +84,29 @@ public class AmendeService {
             a.setMontant(parametreService.montantAmende());
             a.setDateGeneration(now);
             a.setStatutPaiement(StatutAmende.IMPAYEE);
-            amendeDAO.save(a);
-            created++;
+            creees.add(amendeDAO.save(a));
         }
-        return created;
+        return creees;
     }
 
     /**
-     * Marque une amende comme PAYEE. Lève IllegalStateException si elle l'est déjà.
+     * Marque une amende comme PAYEE (en espèces). Lève IllegalStateException si elle l'est déjà.
      */
     public Amende marquerPayee(Integer id) {
+        return marquerPayee(id, ModePaiement.ESPECES);
+    }
+
+    /**
+     * Marque une amende comme PAYEE avec le moyen de paiement utilisé.
+     */
+    public Amende marquerPayee(Integer id, ModePaiement mode) {
         Amende a = trouver(id);
         if (a.getStatutPaiement() == StatutAmende.PAYEE) {
             throw new IllegalStateException("Cette amende est déjà payée.");
         }
         a.setStatutPaiement(StatutAmende.PAYEE);
+        a.setDatePaiement(LocalDate.now());
+        a.setModePaiement(mode != null ? mode : ModePaiement.ESPECES);
         return amendeDAO.save(a);
     }
 
@@ -96,11 +114,15 @@ public class AmendeService {
      * Variante côté membre — uniquement si l'amende lui appartient.
      */
     public Amende payerParMembre(Integer amendeId, Integer membreNumero) {
+        return payerParMembre(amendeId, membreNumero, ModePaiement.ESPECES);
+    }
+
+    public Amende payerParMembre(Integer amendeId, Integer membreNumero, ModePaiement mode) {
         Amende a = trouver(amendeId);
         if (!a.getMembre().getNumero().equals(membreNumero)) {
             throw new IllegalArgumentException("Cette amende ne vous appartient pas.");
         }
-        return marquerPayee(amendeId);
+        return marquerPayee(amendeId, mode);
     }
 
     public void supprimer(Integer id) {

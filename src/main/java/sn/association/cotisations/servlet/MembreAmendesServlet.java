@@ -27,6 +27,7 @@ import java.util.List;
 public class MembreAmendesServlet extends HttpServlet {
 
     @Inject AmendeService amendeService;
+    @Inject sn.association.cotisations.service.NotificationService notificationService;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -63,6 +64,8 @@ public class MembreAmendesServlet extends HttpServlet {
         try {
             Integer id = Integer.valueOf(req.getParameter("id"));
             Amende a = amendeService.payerParMembre(id, user.getNumero());
+            notificationService.paiement(user, java.util.List.of(), java.util.List.of(a),
+                    sn.association.cotisations.entity.ModePaiement.ESPECES, false);
             FlashUtil.success(req, "Amende de " + a.getMontant() + " FCFA payée. Merci.");
         } catch (IllegalArgumentException | IllegalStateException e) {
             FlashUtil.error(req, e.getMessage());

@@ -125,8 +125,39 @@ Les paramètres sensibles ne sont **pas dans le code**. À définir dans l'envir
 | `SMTP_PASSWORD` | — | Mot de passe ou _app password_ |
 | `SMTP_FROM`     | = `SMTP_USER` | Adresse expéditeur |
 | `SMTP_STARTTLS` | `true` | Active STARTTLS |
+| `SMTP_FROM_NAME` | `Cotisen` | Nom d'expéditeur affiché |
+| `APP_BASE_URL`  | (déduite de la requête) | URL publique, utilisée dans les liens des emails (mot de passe, bienvenue). Indispensable derrière un proxy. |
 
 Pour Gmail, créer un **App Password** sur https://myaccount.google.com/apppasswords.
+Avec Docker, recopier `.env.example` en `.env` (jamais commité) : `docker compose` le lit automatiquement.
+
+---
+
+## API de l'application mobile
+
+L'application Flutter **Cotisen** utilise l'API JSON `/api/*` (authentification par jeton `Authorization: Bearer …`, valable 30 jours) :
+
+| Méthode | Route | Rôle |
+|---|---|---|
+| `POST` | `/api/auth/login` | `{email, motDePasse}` → `{jeton, expireLe, utilisateur}` |
+| `POST` | `/api/auth/logout` · `/api/auth/mot-de-passe` · `/api/auth/mot-de-passe-oublie` | Session et mot de passe |
+| `GET`  | `/api/donnees` | Tout ce que l'utilisateur peut voir (tout pour un admin) |
+| `POST` | `/api/paiements` | Paiement du membre connecté `{periodes, amendes, mode}` |
+| `POST` | `/api/notifications/lues` | Marque les notifications comme lues |
+| `POST/PUT/DELETE` | `/api/admin/membres[/{n}[/statut\|/paiements]]` | Gestion des membres, encaissement |
+| `POST` | `/api/admin/amendes/generer` · `/api/admin/amendes/{id}/payer` · `/api/admin/rappels` | Amendes et rappels |
+
+Chaque paiement, amende, rappel et création de membre envoie un **e-mail HTML** et une notification dans l'application.
+
+### Développement local (avec boîte mail de test)
+
+```bash
+colima start                       # ou Docker Desktop
+APP_PORT=8088 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+```
+
+- Application et API : http://localhost:8088
+- E-mails captés par Mailpit : http://localhost:8025
 
 ---
 

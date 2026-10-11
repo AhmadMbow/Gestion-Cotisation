@@ -36,6 +36,8 @@ import java.util.Optional;
 public class MembresServlet extends HttpServlet {
 
     @Inject MembreService membreService;
+    @Inject sn.association.cotisations.service.NotificationService notificationService;
+    @Inject sn.association.cotisations.service.PasswordResetService passwordResetService;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -91,6 +93,9 @@ public class MembresServlet extends HttpServlet {
                     parseDate(req.getParameter("dateNaissance")),
                     parseRole(req.getParameter("role")),
                     req.getParameter("motDePasse"));
+            notificationService.bienvenue(m, passwordResetService.creerLien(m,
+                    sn.association.cotisations.service.PasswordResetService.TTL_BIENVENUE,
+                    sn.association.cotisations.service.PasswordResetService.baseUrl(req)));
             FlashUtil.success(req, "Membre " + m.getPrenom() + " " + m.getNom() + " ajouté avec succès.");
             resp.sendRedirect(req.getContextPath() + "/admin/membres");
         } catch (IllegalArgumentException e) {

@@ -24,6 +24,14 @@ public class CsrfFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         HttpServletResponse resp = (HttpServletResponse) response;
 
+        // L'API mobile s'authentifie par jeton « Bearer » (pas de cookie de session) :
+        // elle n'est pas exposée au CSRF et ne doit pas créer de session.
+        String path = req.getRequestURI().substring(req.getContextPath().length());
+        if (path.startsWith("/api/")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         // Toujours fournir un token aux vues (création de la session si besoin)
         String token = CsrfUtil.tokenFor(req);
         req.setAttribute("csrfToken", token);

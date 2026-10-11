@@ -8,7 +8,9 @@ import sn.association.cotisations.entity.Role;
 import sn.association.cotisations.entity.StatutMembre;
 import sn.association.cotisations.util.PasswordUtil;
 
+import java.security.SecureRandom;
 import java.time.LocalDate;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +33,20 @@ public class MembreService {
      */
     public Membre creer(String prenom, String nom, String email, LocalDate dateNaissance,
                         Role role, String motDePasseClair) {
+        valider(prenom, nom, email, motDePasseClair); // le formulaire web exige un mot de passe
+        return creer(prenom, nom, email, null, dateNaissance, null, role, motDePasseClair);
+    }
+
+    /**
+     * Variante complète (application mobile). Si le mot de passe est vide, un mot de passe
+     * aléatoire est attribué : le membre choisira le sien via l'e-mail de bienvenue.
+     * Sans date d'adhésion, c'est la date du jour.
+     */
+    public Membre creer(String prenom, String nom, String email, String telephone,
+                        LocalDate dateNaissance, LocalDate dateAdhesion, Role role,
+                        String motDePasseClair) {
+        boolean motDePasseFourni = motDePasseClair != null && !motDePasseClair.isBlank();
+        if (!motDePasseFourni) motDePasseClair = motDePasseAleatoire();
         valider(prenom, nom, email, motDePasseClair);
 
         String emailNorm = email.trim().toLowerCase();
@@ -42,8 +58,9 @@ public class MembreService {
         m.setPrenom(prenom.trim());
         m.setNom(nom.trim());
         m.setEmail(emailNorm);
+        m.setTelephone(nettoyer(telephone));
         m.setDateNaissance(dateNaissance);
-        m.setDateAdhesion(LocalDate.now());
+        m.setDateAdhesion(dateAdhesion != null ? dateAdhesion : LocalDate.now());
         m.setStatut(StatutMembre.ACTIF);
         m.setRole(role != null ? role : Role.MEMBRE);
         m.setMotDePasse(PasswordUtil.hash(motDePasseClair));
@@ -55,6 +72,18 @@ public class MembreService {
      */
     public Membre modifier(Integer numero, String prenom, String nom, String email,
                            LocalDate dateNaissance, Role role, String nouveauMotDePasse) {
+        Membre m = membreDAO.findById(numero)
+                .orElseThrow(() -> new IllegalArgumentException("Membre introuvable."));
+        return modifier(numero, prenom, nom, email, m.getTelephone(), dateNaissance,
+                m.getDateAdhesion(), role, nouveauMotDePasse);
+    }
+
+    /**
+     * Variante complète (application mobile) : téléphone et date d'adhésion en plus.
+     */
+    public Membre modifier(Integer numero, String prenom, String nom, String email, String telephone,
+                           LocalDate dateNaissance, LocalDate dateAdhesion, Role role,
+                           String nouveauMotDePasse) {
         Membre m = membreDAO.findById(numero)
                 .orElseThrow(() -> new IllegalArgumentException("Membre introuvable."));
 
@@ -73,7 +102,9 @@ public class MembreService {
         m.setPrenom(prenom.trim());
         m.setNom(nom.trim());
         m.setEmail(emailNorm);
+        m.setTelephone(nettoyer(telephone));
         m.setDateNaissance(dateNaissance);
+        if (dateAdhesion != null) m.setDateAdhesion(dateAdhesion);
         if (role != null) m.setRole(role);
         if (nouveauMotDePasse != null && !nouveauMotDePasse.isBlank()) {
             m.setMotDePasse(PasswordUtil.hash(nouveauMotDePasse));
@@ -90,6 +121,16 @@ public class MembreService {
                 .orElseThrow(() -> new IllegalArgumentException("Membre introuvable."));
         m.setStatut(m.getStatut() == StatutMembre.ACTIF ? StatutMembre.INACTIF : StatutMembre.ACTIF);
         return membreDAO.save(m);
+    }
+
+    private static String nettoyer(String v) {
+        return (v == null || v.isBlank()) ? null : v.trim();
+    }
+
+    private static String motDePasseAleatoire() {
+        byte[] bytes = new byte[18];
+        new SecureRandom().nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
     private void valider(String prenom, String nom, String email, String motDePasse) {

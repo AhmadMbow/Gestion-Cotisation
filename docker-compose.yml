@@ -35,6 +35,9 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM: ${SMTP_FROM:-}
       SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+      SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Cotisen}
+      # URL publique utilisée dans les liens des emails (mot de passe, bienvenue)
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
     # Port interne uniquement : c'est Nginx (frontend) qui expose l'app.
     expose:
       - "8080"
@@ -50,7 +53,8 @@ services:
     depends_on:
       - backend
     ports:
-      - "8080:80"
+      # Port de l'application sur la machine (APP_PORT=8088 si 8080 est déjà pris)
+      - "${APP_PORT:-8080}:80"
 
 volumes:
   mysql_data:

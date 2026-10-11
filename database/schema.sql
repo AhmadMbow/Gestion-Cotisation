@@ -3,6 +3,10 @@
 -- MySQL 8.x
 -- =========================================================
 
+-- Le fichier est en UTF-8 : sans cette ligne, MySQL le lit en latin1
+-- et les accents sont enregistrés mal encodés (« SystÃ¨me »).
+SET NAMES utf8mb4;
+
 CREATE DATABASE IF NOT EXISTS cotisations_db
     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE cotisations_db;
@@ -13,6 +17,7 @@ CREATE TABLE IF NOT EXISTS membre (
     prenom          VARCHAR(80) NOT NULL,
     nom             VARCHAR(80) NOT NULL,
     email           VARCHAR(120) NOT NULL UNIQUE,
+    telephone       VARCHAR(30),
     date_naissance  DATE,
     date_adhesion   DATE NOT NULL,
     statut          ENUM('ACTIF','INACTIF') NOT NULL DEFAULT 'ACTIF',
@@ -41,6 +46,8 @@ CREATE TABLE IF NOT EXISTS amende (
     montant         DECIMAL(10,2) NOT NULL,
     date_generation DATE NOT NULL,
     statut_paiement ENUM('PAYEE','IMPAYEE') NOT NULL DEFAULT 'IMPAYEE',
+    date_paiement   DATE,
+    mode_paiement   ENUM('ESPECES','VIREMENT','WAVE','ORANGE_MONEY','FREE_MONEY'),
     CONSTRAINT fk_amende_membre FOREIGN KEY (membre_numero) REFERENCES membre(numero) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 

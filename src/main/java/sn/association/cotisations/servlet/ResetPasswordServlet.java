@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import sn.association.cotisations.dao.ApiTokenDAO;
 import sn.association.cotisations.dao.MembreDAO;
 import sn.association.cotisations.dao.PasswordResetTokenDAO;
 import sn.association.cotisations.entity.Membre;
@@ -25,6 +26,7 @@ public class ResetPasswordServlet extends HttpServlet {
 
     @Inject PasswordResetTokenDAO tokenDAO;
     @Inject MembreDAO membreDAO;
+    @Inject ApiTokenDAO apiTokenDAO;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -72,6 +74,8 @@ public class ResetPasswordServlet extends HttpServlet {
         m.setMotDePasse(PasswordUtil.hash(newPassword));
         membreDAO.save(m);
         tokenDAO.markUsed(prt.getId());
+        // Nouveau mot de passe : les sessions de l'application mobile sont fermées.
+        apiTokenDAO.deleteByMembre(m.getNumero());
 
         FlashUtil.success(req, "Mot de passe modifié. Vous pouvez maintenant vous connecter.");
         resp.sendRedirect(req.getContextPath() + "/login");

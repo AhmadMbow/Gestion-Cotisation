@@ -26,6 +26,10 @@ public class Membre implements Serializable {
     @Column(nullable = false, length = 120, unique = true)
     private String email;
 
+    /** Numéro de téléphone (facultatif) — utilisé pour le paiement mobile. */
+    @Column(length = 30)
+    private String telephone;
+
     @Column(name = "date_naissance")
     private LocalDate dateNaissance;
 
@@ -63,6 +67,9 @@ public class Membre implements Serializable {
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public String getTelephone() { return telephone; }
+    public void setTelephone(String telephone) { this.telephone = telephone; }
 
     public LocalDate getDateNaissance() { return dateNaissance; }
     public void setDateNaissance(LocalDate dateNaissance) { this.dateNaissance = dateNaissance; }

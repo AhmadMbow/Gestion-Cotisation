@@ -31,6 +31,7 @@ import java.util.List;
 public class MembreCotisationsServlet extends HttpServlet {
 
     @Inject CotisationService cotisationService;
+    @Inject sn.association.cotisations.service.NotificationService notificationService;
     @Inject sn.association.cotisations.service.ParametreService parametreService;
 
     @Override
@@ -94,6 +95,7 @@ public class MembreCotisationsServlet extends HttpServlet {
             ModePaiement mode = ModePaiement.valueOf(modeParam);
 
             Cotisation c = cotisationService.enregistrer(user.getNumero(), montant, mois, annee, mode);
+            notificationService.paiement(c.getMembre(), java.util.List.of(c), java.util.List.of(), mode, false);
             FlashUtil.success(req, "Paiement enregistré. Voici votre reçu.");
             resp.sendRedirect(req.getContextPath() + "/membre/recu?id=" + c.getId());
 

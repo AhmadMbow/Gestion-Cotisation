@@ -30,6 +30,14 @@ public class Amende implements Serializable {
     @Column(name = "statut_paiement", nullable = false, length = 10)
     private StatutAmende statutPaiement = StatutAmende.IMPAYEE;
 
+    /** Date du règlement (renseignée quand l'amende passe à PAYEE). */
+    @Column(name = "date_paiement")
+    private LocalDate datePaiement;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "mode_paiement", length = 20)
+    private ModePaiement modePaiement;
+
     public Amende() {
     }
 
@@ -47,6 +55,12 @@ public class Amende implements Serializable {
 
     public StatutAmende getStatutPaiement() { return statutPaiement; }
     public void setStatutPaiement(StatutAmende statut) { this.statutPaiement = statut; }
+
+    public LocalDate getDatePaiement() { return datePaiement; }
+    public void setDatePaiement(LocalDate datePaiement) { this.datePaiement = datePaiement; }
+
+    public ModePaiement getModePaiement() { return modePaiement; }
+    public void setModePaiement(ModePaiement modePaiement) { this.modePaiement = modePaiement; }
 
     @Override
     public boolean equals(Object o) {

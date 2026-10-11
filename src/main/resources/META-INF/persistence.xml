@@ -14,6 +14,8 @@
         <class>sn.association.cotisations.entity.Connexion</class>
         <class>sn.association.cotisations.entity.PasswordResetToken</class>
         <class>sn.association.cotisations.entity.Parametre</class>
+        <class>sn.association.cotisations.entity.ApiToken</class>
+        <class>sn.association.cotisations.entity.Notification</class>
 
         <properties>
             <property name="jakarta.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>

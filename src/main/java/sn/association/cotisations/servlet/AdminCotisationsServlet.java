@@ -32,6 +32,7 @@ import java.util.List;
 public class AdminCotisationsServlet extends HttpServlet {
 
     @Inject CotisationService cotisationService;
+    @Inject sn.association.cotisations.service.NotificationService notificationService;
     @Inject MembreService membreService;
     @Inject sn.association.cotisations.service.ParametreService parametreService;
 
@@ -103,6 +104,7 @@ public class AdminCotisationsServlet extends HttpServlet {
             ModePaiement mode = ModePaiement.valueOf(modeParam);
 
             Cotisation c = cotisationService.enregistrer(membreNumero, montant, mois, annee, mode);
+            notificationService.paiement(c.getMembre(), java.util.List.of(c), java.util.List.of(), mode, true);
             FlashUtil.success(req,
                     "Cotisation de " + c.getMembre().getPrenom() + " " + c.getMembre().getNom()
                     + " pour " + mois + "/" + annee + " enregistrée.");

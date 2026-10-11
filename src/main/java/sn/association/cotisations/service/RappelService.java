@@ -24,6 +24,7 @@ public class RappelService {
 
     @Inject CotisationService cotisationService;
     @Inject MailService mailService;
+    @Inject NotificationService notificationService;
 
     public static class Resultat {
         public int envoyes;
@@ -47,25 +48,26 @@ public class RappelService {
             int nbMoisDus = cotisationService.moisDusParMembre(m).size();
             BigDecimal totalDu = cotisationService.montantTotalDu(m);
 
-            String sujet = "Rappel — Cotisation " + String.format("%02d/%d", mois, annee);
-            String corps = "Bonjour " + m.getPrenom() + ",\n\n"
-                    + "Vous n'avez pas encore réglé votre cotisation pour le mois "
-                    + String.format("%02d/%d", mois, annee) + ".\n\n"
-                    + "Récapitulatif :\n"
-                    + "  - Mois en attente : " + nbMoisDus + "\n"
-                    + "  - Montant total dû : " + totalDu + " FCFA\n\n"
-                    + "Merci de régulariser dès que possible.\n\n"
-                    + "Cordialement,\n"
-                    + "-- Gestion Cotisations";
+            String moisLibelle = EmailTemplate.mois(mois, annee);
+            String sujet = "Rappel — Cotisation de " + moisLibelle;
+            EmailTemplate mail = EmailTemplate.titre("Petit rappel pour votre cotisation")
+                    .intro("Bonjour " + m.getPrenom() + ",")
+                    .intro("Vous n'avez pas encore réglé votre cotisation de " + moisLibelle + ".")
+                    .ligne("Mois en attente", String.valueOf(nbMoisDus))
+                    .total("Montant total dû", EmailTemplate.fcfa(totalDu))
+                    .conclusion("Vous pouvez régulariser en quelques secondes depuis l'application Cotisen "
+                            + "(Wave, Orange Money ou Free Money). Merci !");
 
             try {
-                mailService.send(m.getEmail(), sujet, corps);
+                mailService.send(m.getEmail(), sujet, mail.texte(), mail.html());
+                notificationService.rappel(m, nbMoisDus, totalDu);
                 r.envoyes++;
             } catch (MessagingException e) {
                 log.error("Échec rappel à {}", m.getEmail(), e);
                 r.echecs++;
             }
         }
+        notificationService.rappelsEnvoyes(r.envoyes);
         return r;
     }
 }
