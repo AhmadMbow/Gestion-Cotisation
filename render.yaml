@@ -1,0 +1,42 @@
+# Render — déploiement gratuit (Blueprint : New → Blueprint → ce dépôt).
+# Base MySQL gratuite hébergée chez Aiven : coller son « Service URI » dans DATABASE_URL.
+services:
+  - type: web
+    name: cotisen
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: api-mobile
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/sante
+    envVars:
+      # Tomcat écoute sur 8080
+      - key: PORT
+        value: "8080"
+      # Instance gratuite : 512 Mo de mémoire
+      - key: JAVA_OPTS
+        value: "-Xmx280m -XX:MaxMetaspaceSize=160m -Xss512k -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:+ExitOnOutOfMemoryError"
+      # mysql://avnadmin:…@…aivencloud.com:…/defaultdb?ssl-mode=REQUIRED (fourni par Aiven)
+      - key: DATABASE_URL
+        sync: false
+      # Envoi des e-mails (mot de passe d'application Gmail)
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_STARTTLS
+        value: "true"
+      - key: SMTP_USER
+        value: papaahmadmbow@gmail.com
+      - key: SMTP_FROM
+        value: papaahmadmbow@gmail.com
+      - key: SMTP_FROM_NAME
+        value: Cotisen
+      - key: SMTP_PASSWORD
+        sync: false
+      # Premier administrateur, créé si la base est vide. Mot de passe aléatoire :
+      # utiliser « Mot de passe oublié ? » pour choisir le sien (lien reçu par e-mail).
+      - key: ADMIN_EMAIL
+        value: papaahmadmbow@gmail.com
+      - key: ADMIN_PASSWORD
+        generateValue: true

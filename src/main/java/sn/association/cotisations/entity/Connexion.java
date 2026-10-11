@@ -1,6 +1,8 @@
 package sn.association.cotisations.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -17,6 +19,7 @@ public class Connexion implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "membre_numero", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Membre membre;
 
     @Column(name = "date_connexion", nullable = false)

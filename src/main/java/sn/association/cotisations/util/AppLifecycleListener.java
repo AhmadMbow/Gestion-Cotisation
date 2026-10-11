@@ -21,6 +21,7 @@ public class AppLifecycleListener implements ServletContextListener {
         JPAUtil.getEntityManagerFactory();
         sce.getServletContext().log("EntityManagerFactory initialisé.");
         amorcerAdminSiBaseVide(sce);
+        KeepAlive.demarrer();
     }
 
     /**
@@ -51,6 +52,7 @@ public class AppLifecycleListener implements ServletContextListener {
 
     @Override
     public void contextDestroyed(ServletContextEvent sce) {
+        KeepAlive.arreter();
         JPAUtil.close();
         sce.getServletContext().log("EntityManagerFactory fermé.");
     }

@@ -76,6 +76,7 @@ public class PasswordResetService {
      */
     public static String baseUrl(HttpServletRequest req) {
         String env = System.getenv("APP_BASE_URL");
+        if (env == null || env.isBlank()) env = System.getenv("RENDER_EXTERNAL_URL"); // fourni par Render
         if (env != null && !env.isBlank()) return env.replaceAll("/+$", "");
         StringBuilder url = new StringBuilder();
         url.append(req.getScheme()).append("://").append(req.getServerName());

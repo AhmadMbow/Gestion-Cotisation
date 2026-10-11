@@ -4,6 +4,9 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
+import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,7 +48,43 @@ public final class JPAUtil {
         putIfSet(props, "jakarta.persistence.jdbc.url",      System.getenv("DB_URL"));
         putIfSet(props, "jakarta.persistence.jdbc.user",     System.getenv("DB_USER"));
         putIfSet(props, "jakarta.persistence.jdbc.password", System.getenv("DB_PASSWORD"));
+        // DATABASE_URL (« mysql://user:mdp@hôte:port/base?ssl-mode=REQUIRED », format
+        // donné par Aiven et la plupart des hébergeurs) l'emporte s'il est défini.
+        String databaseUrl = System.getenv("DATABASE_URL");
+        if (databaseUrl != null && !databaseUrl.isBlank()) {
+            props.putAll(depuisDatabaseUrl(databaseUrl.trim()));
+        }
         return props;
+    }
+
+    /** Convertit une URL « mysql://… » en paramètres JDBC (URL, utilisateur, mot de passe). */
+    static Map<String, Object> depuisDatabaseUrl(String databaseUrl) {
+        URI uri = URI.create(databaseUrl);
+        if (!"mysql".equalsIgnoreCase(uri.getScheme())) {
+            throw new IllegalArgumentException("DATABASE_URL doit commencer par mysql://");
+        }
+        String base = uri.getPath() == null || uri.getPath().length() <= 1
+                ? "defaultdb" : uri.getPath().substring(1);
+        String query = uri.getRawQuery() == null ? "" : uri.getRawQuery();
+        boolean ssl = query.contains("ssl-mode=REQUIRED") || query.contains("sslmode=require")
+                || query.contains("ssl-mode=VERIFY");
+        String jdbc = "jdbc:mysql://" + uri.getHost() + ":" + (uri.getPort() > 0 ? uri.getPort() : 3306)
+                + "/" + base + "?serverTimezone=UTC&characterEncoding=UTF-8"
+                + (ssl ? "&sslMode=REQUIRED" : "&useSSL=false&allowPublicKeyRetrieval=true");
+
+        Map<String, Object> props = new HashMap<>();
+        props.put("jakarta.persistence.jdbc.url", jdbc);
+        String info = uri.getRawUserInfo();
+        if (info != null) {
+            int i = info.indexOf(':');
+            props.put("jakarta.persistence.jdbc.user", decode(i < 0 ? info : info.substring(0, i)));
+            if (i >= 0) props.put("jakarta.persistence.jdbc.password", decode(info.substring(i + 1)));
+        }
+        return props;
+    }
+
+    private static String decode(String s) {
+        return URLDecoder.decode(s, StandardCharsets.UTF_8);
     }
 
     private static void putIfSet(Map<String, Object> props, String key, String value) {
