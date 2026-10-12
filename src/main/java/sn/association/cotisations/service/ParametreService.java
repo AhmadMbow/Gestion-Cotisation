@@ -2,44 +2,51 @@ package sn.association.cotisations.service;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import sn.association.cotisations.dao.ParametreDAO;
-import sn.association.cotisations.entity.Parametre;
+import sn.association.cotisations.dao.GroupeDAO;
+import sn.association.cotisations.entity.Groupe;
 
 import java.math.BigDecimal;
 
 /**
- * Expose les montants standards configurables par l'administrateur
- * (montant de la cotisation mensuelle et montant d'une amende de retard).
+ * Montants standards d'un groupe (cotisation mensuelle et amende de retard).
+ * Les méthodes sans groupe concernent le groupe historique (interface web).
  */
 @ApplicationScoped
 public class ParametreService {
 
-    @Inject ParametreDAO parametreDAO;
+    @Inject GroupeDAO groupeDAO;
 
-    public Parametre get() {
-        return parametreDAO.getOuCreer();
+    /** Groupe historique : ses montants s'affichent sur la page « Paramètres » du site. */
+    public Groupe get() {
+        return groupeDAO.findById(Groupe.HISTORIQUE)
+                .orElseThrow(() -> new IllegalStateException("Groupe historique introuvable."));
     }
 
-    /** Montant standard de la cotisation mensuelle, défini par l'admin. */
     public BigDecimal montantCotisation() {
         return get().getMontantCotisation();
     }
 
-    /** Montant standard d'une amende de retard, défini par l'admin. */
     public BigDecimal montantAmende() {
         return get().getMontantAmende();
     }
 
-    public Parametre mettreAJour(BigDecimal montantCotisation, BigDecimal montantAmende) {
+    public Groupe mettreAJour(BigDecimal montantCotisation, BigDecimal montantAmende) {
+        return mettreAJour(get(), montantCotisation, montantAmende);
+    }
+
+    public Groupe mettreAJour(Groupe g, BigDecimal montantCotisation, BigDecimal montantAmende) {
+        verifier(montantCotisation, montantAmende);
+        g.setMontantCotisation(montantCotisation);
+        g.setMontantAmende(montantAmende);
+        return groupeDAO.save(g);
+    }
+
+    static void verifier(BigDecimal montantCotisation, BigDecimal montantAmende) {
         if (montantCotisation == null || montantCotisation.signum() <= 0) {
             throw new IllegalArgumentException("Le montant de la cotisation doit être strictement positif.");
         }
         if (montantAmende == null || montantAmende.signum() < 0) {
             throw new IllegalArgumentException("Le montant de l'amende ne peut pas être négatif.");
         }
-        Parametre p = get();
-        p.setMontantCotisation(montantCotisation);
-        p.setMontantAmende(montantAmende);
-        return parametreDAO.save(p);
     }
 }

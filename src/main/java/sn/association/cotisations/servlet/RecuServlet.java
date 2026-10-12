@@ -62,7 +62,8 @@ public class RecuServlet extends HttpServlet {
 
         Membre user = (Membre) req.getSession().getAttribute("user");
         boolean isProprio = user.getNumero().equals(c.getMembre().getNumero());
-        boolean isAdmin = user.getRole() == Role.ADMIN;
+        boolean isAdmin = user.getRole() == Role.ADMIN
+                && c.getMembre().appartientAuGroupe(user.getGroupe().getId());
         if (!isProprio && !isAdmin) {
             resp.sendError(HttpServletResponse.SC_FORBIDDEN, "Reçu inaccessible.");
             return;

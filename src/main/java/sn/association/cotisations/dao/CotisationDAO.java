@@ -3,6 +3,7 @@ package sn.association.cotisations.dao;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import sn.association.cotisations.entity.Cotisation;
+import sn.association.cotisations.entity.Groupe;
 import sn.association.cotisations.entity.StatutCotisation;
 import sn.association.cotisations.util.JPAUtil;
 
@@ -41,12 +42,18 @@ public class CotisationDAO {
         }
     }
 
+    /** Cotisations du groupe historique (interface web). */
     public List<Cotisation> findAll() {
+        return findByGroupe(Groupe.HISTORIQUE);
+    }
+
+    public List<Cotisation> findByGroupe(int groupe) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.createQuery(
-                    "SELECT c FROM Cotisation c JOIN FETCH c.membre " +
+                    "SELECT c FROM Cotisation c JOIN FETCH c.membre m WHERE m.groupe.id = :g " +
                     "ORDER BY c.datePaiement DESC, c.id DESC", Cotisation.class)
+                    .setParameter("g", groupe)
                     .getResultList();
         } finally {
             em.close();
@@ -75,7 +82,7 @@ public class CotisationDAO {
     }
 
     /**
-     * Compte des membres ACTIFS qui n'ont pas payé leur cotisation du mois en cours.
+     * Compte des membres ACTIFS (groupe historique) qui n'ont pas payé leur cotisation du mois en cours.
      */
     public long countMembresEnRetardMoisCourant() {
         EntityManager em = JPAUtil.getEntityManager();
@@ -83,11 +90,12 @@ public class CotisationDAO {
             LocalDate now = LocalDate.now();
             return em.createQuery(
                     "SELECT COUNT(m) FROM Membre m WHERE m.statut = sn.association.cotisations.entity.StatutMembre.ACTIF " +
-                    "AND m.role = sn.association.cotisations.entity.Role.MEMBRE " +
+                    "AND m.role = sn.association.cotisations.entity.Role.MEMBRE AND m.groupe.id = :g " +
                     "AND NOT EXISTS (SELECT 1 FROM Cotisation c " +
                     "                WHERE c.membre = m AND c.mois = :m AND c.annee = :a " +
                     "                AND c.statut = sn.association.cotisations.entity.StatutCotisation.PAYE)",
                     Long.class)
+                    .setParameter("g", Groupe.HISTORIQUE)
                     .setParameter("m", now.getMonthValue())
                     .setParameter("a", now.getYear())
                     .getSingleResult();
@@ -100,8 +108,9 @@ public class CotisationDAO {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.createQuery(
-                    "SELECT c FROM Cotisation c JOIN FETCH c.membre ORDER BY c.datePaiement DESC",
-                    Cotisation.class)
+                    "SELECT c FROM Cotisation c JOIN FETCH c.membre m WHERE m.groupe.id = :g " +
+                    "ORDER BY c.datePaiement DESC", Cotisation.class)
+                    .setParameter("g", Groupe.HISTORIQUE)
                     .setMaxResults(limit)
                     .getResultList();
         } finally {
@@ -115,7 +124,9 @@ public class CotisationDAO {
             LocalDate now = LocalDate.now();
             BigDecimal r = em.createQuery(
                     "SELECT COALESCE(SUM(c.montant), 0) FROM Cotisation c " +
-                    "WHERE c.mois = :m AND c.annee = :a AND c.statut = :s", BigDecimal.class)
+                    "WHERE c.mois = :m AND c.annee = :a AND c.statut = :s AND c.membre.groupe.id = :g",
+                    BigDecimal.class)
+                    .setParameter("g", Groupe.HISTORIQUE)
                     .setParameter("m", now.getMonthValue())
                     .setParameter("a", now.getYear())
                     .setParameter("s", StatutCotisation.PAYE)
@@ -137,9 +148,10 @@ public class CotisationDAO {
             return em.createQuery(
                     "SELECT c.annee, c.mois, COALESCE(SUM(c.montant), 0) " +
                     "FROM Cotisation c " +
-                    "WHERE c.statut = :s AND c.datePaiement >= :from " +
+                    "WHERE c.statut = :s AND c.datePaiement >= :from AND c.membre.groupe.id = :g " +
                     "GROUP BY c.annee, c.mois " +
                     "ORDER BY c.annee, c.mois", Object[].class)
+                    .setParameter("g", Groupe.HISTORIQUE)
                     .setParameter("s", StatutCotisation.PAYE)
                     .setParameter("from", from)
                     .getResultList();
@@ -157,8 +169,9 @@ public class CotisationDAO {
         try {
             return em.createQuery(
                     "SELECT c.modePaiement, COUNT(c) FROM Cotisation c " +
-                    "WHERE c.statut = :s GROUP BY c.modePaiement " +
+                    "WHERE c.statut = :s AND c.membre.groupe.id = :g GROUP BY c.modePaiement " +
                     "ORDER BY COUNT(c) DESC", Object[].class)
+                    .setParameter("g", Groupe.HISTORIQUE)
                     .setParameter("s", StatutCotisation.PAYE)
                     .getResultList();
         } finally {

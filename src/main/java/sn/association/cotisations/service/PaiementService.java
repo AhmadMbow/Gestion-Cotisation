@@ -66,7 +66,7 @@ public class PaiementService {
 
         List<Cotisation> cotisations = new ArrayList<>();
         for (YearMonth p : mois.stream().sorted().toList()) {
-            cotisations.add(cotisationService.enregistrer(m.getNumero(), cotisationService.montantParDefaut(),
+            cotisations.add(cotisationService.enregistrer(m.getNumero(), m.getGroupe().getMontantCotisation(),
                     p.getMonthValue(), p.getYear(), mode));
         }
         List<Amende> amendes = new ArrayList<>();

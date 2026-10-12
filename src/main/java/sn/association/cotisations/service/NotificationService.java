@@ -6,11 +6,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sn.association.cotisations.dao.NotificationDAO;
 import sn.association.cotisations.entity.Amende;
+import sn.association.cotisations.entity.Compte;
 import sn.association.cotisations.entity.Cotisation;
+import sn.association.cotisations.entity.Groupe;
 import sn.association.cotisations.entity.Membre;
 import sn.association.cotisations.entity.ModePaiement;
 import sn.association.cotisations.entity.Notification;
 import sn.association.cotisations.entity.Notification.Type;
+import sn.association.cotisations.entity.PaiementAbonnement;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -62,7 +65,7 @@ public class NotificationService {
         notifier(m, Type.PAIEMENT, "Paiement confirmé",
                 resume + " réglé (" + EmailTemplate.fcfa(total) + "). Votre reçu est disponible.");
         if (!parAdmin) {
-            notifier(null, Type.PAIEMENT, "Nouveau paiement",
+            notifierAdmins(m.getGroupe(), Type.PAIEMENT, "Nouveau paiement",
                     m.getPrenom() + " " + m.getNom() + " a payé " + EmailTemplate.fcfa(total)
                             + " via " + libelle(mode) + ".");
         }
@@ -98,17 +101,18 @@ public class NotificationService {
             EmailTemplate mail = EmailTemplate.titre("Une amende a été ajoutée à votre compte")
                     .intro("Bonjour " + m.getPrenom() + ",")
                     .intro("Votre cotisation de " + mois + " n'a pas encore été réglée. "
-                            + "Conformément au règlement de l'association, une amende pour retard a été générée.")
+                            + "Conformément au règlement du groupe « " + m.getGroupe().getNom()
+                            + " », une amende pour retard a été générée.")
                     .ligne("Motif", "Retard de cotisation · " + mois)
                     .ligne("Date", EmailTemplate.date(d))
                     .total("Montant", EmailTemplate.fcfa(a.getMontant()))
                     .conclusion("Vous pouvez régler votre cotisation et cette amende depuis l'application Cotisen "
-                            + "(Wave, Orange Money ou Free Money).");
+                            + "(Wave, Orange Money ou Mixx by Yas).");
             mailService.sendAsync(m.getEmail(), "Nouvelle amende — " + mois, mail.texte(), mail.html());
         }
         if (!amendes.isEmpty()) {
             int n = amendes.size();
-            notifier(null, Type.AMENDE, "Amendes générées",
+            notifierAdmins(amendes.get(0).getMembre().getGroupe(), Type.AMENDE, "Amendes générées",
                     n + " amende" + (n > 1 ? "s" : "") + " créée" + (n > 1 ? "s" : "") + " pour retard de paiement.");
         }
     }
@@ -117,12 +121,27 @@ public class NotificationService {
     // Membres
     // ------------------------------------------------------------------
 
-    /** Email de bienvenue avec le lien pour choisir son mot de passe. */
+    /**
+     * Membre ajouté par un administrateur. Avec un lien : le compte vient d'être créé et
+     * la personne choisit son mot de passe ; sans lien : elle avait déjà un compte.
+     */
     public void bienvenue(Membre m, String lienMotDePasse) {
-        notifier(null, Type.MEMBRE, "Nouveau membre",
+        String groupe = m.getGroupe().getNom();
+        notifierAdmins(m.getGroupe(), Type.MEMBRE, "Nouveau membre",
                 m.getPrenom() + " " + m.getNom() + " (" + References.numero(m) + ") a été ajouté.");
-        notifier(m, Type.INFO, "Bienvenue !", "Votre espace Cotisen est prêt. Bonne cotisation !");
-        EmailTemplate mail = EmailTemplate.titre("Bienvenue dans l'association, " + m.getPrenom() + " !")
+        notifier(m, Type.INFO, "Bienvenue !", "Vous faites partie de « " + groupe + " ». Bonne cotisation !");
+        if (lienMotDePasse == null) {
+            EmailTemplate mail = EmailTemplate.titre("Vous avez rejoint « " + groupe + " »")
+                    .intro("Bonjour " + m.getPrenom() + ",")
+                    .intro("Un administrateur vous a ajouté au groupe « " + groupe + " ». Il apparaît "
+                            + "désormais dans votre application Cotisen.")
+                    .ligne("N° de membre", References.numero(m))
+                    .ligne("Membre depuis", EmailTemplate.date(m.getDateAdhesion()))
+                    .conclusion("Connectez-vous avec votre compte habituel pour suivre vos cotisations.");
+            mailService.sendAsync(m.getEmail(), "Nouveau groupe : " + groupe, mail.texte(), mail.html());
+            return;
+        }
+        EmailTemplate mail = EmailTemplate.titre("Bienvenue dans « " + groupe + " », " + m.getPrenom() + " !")
                 .intro("Votre compte Cotisen vient d'être créé. Vous pourrez y payer vos cotisations "
                         + "et suivre votre situation à tout moment.")
                 .ligne("N° de membre", References.numero(m))
@@ -141,9 +160,32 @@ public class NotificationService {
                         + "). Merci de régulariser.");
     }
 
-    public void rappelsEnvoyes(int n) {
+    /** Un membre a rejoint le groupe avec le code d'invitation. */
+    public void membreRejoint(Membre m) {
+        notifierAdmins(m.getGroupe(), Type.MEMBRE, "Nouveau membre",
+                m.getPrenom() + " " + m.getNom() + " a rejoint le groupe avec le code d'invitation.");
+        notifier(m, Type.INFO, "Bienvenue !",
+                "Vous faites partie de « " + m.getGroupe().getNom() + " ». Bonne cotisation !");
+    }
+
+    /** Reçu d'abonnement par e-mail. */
+    public void abonnement(Compte c, PaiementAbonnement p) {
+        EmailTemplate mail = EmailTemplate.titre("Votre forfait " + p.getForfait().getLibelle() + " est actif")
+                .intro("Bonjour " + c.getPrenom() + ",")
+                .intro("Merci pour votre abonnement à Cotisen. Voici votre reçu.")
+                .ligne("Reçu n°", References.abonnement(p))
+                .ligne("Forfait", p.getForfait().getLibelle())
+                .ligne("Période", EmailTemplate.date(p.getDebut()) + " → " + EmailTemplate.date(p.getFin()))
+                .ligne("Moyen de paiement", libelle(p.getModePaiement()))
+                .total("Total payé", EmailTemplate.fcfa(p.getMontant()))
+                .conclusion("Conservez cet e-mail : il fait office de reçu.");
+        mailService.sendAsync(c.getEmail(), "Reçu d'abonnement " + References.abonnement(p),
+                mail.texte(), mail.html());
+    }
+
+    public void rappelsEnvoyes(Groupe g, int n) {
         if (n > 0) {
-            notifier(null, Type.RAPPEL, "Rappels envoyés",
+            notifierAdmins(g, Type.RAPPEL, "Rappels envoyés",
                     n + " membre" + (n > 1 ? "s" : "") + " en retard " + (n > 1 ? "ont" : "a") + " reçu un rappel.");
         }
     }
@@ -151,8 +193,18 @@ public class NotificationService {
     // ------------------------------------------------------------------
 
     private void notifier(Membre m, Type type, String titre, String message) {
+        enregistrer(new Notification(m.getGroupe(), m, type, titre, message));
+    }
+
+    /** Notification pour le fil des administrateurs du groupe. */
+    private void notifierAdmins(Groupe g, Type type, String titre, String message) {
+        enregistrer(new Notification(g, null, type, titre, message));
+    }
+
+    private void enregistrer(Notification n) {
+        String titre = n.getTitre();
         try {
-            notificationDAO.save(new Notification(m, type, titre, message));
+            notificationDAO.save(n);
         } catch (RuntimeException e) {
             log.warn("Notification « {} » non enregistrée : {}", titre, e.getMessage());
         }
@@ -163,7 +215,7 @@ public class NotificationService {
         return switch (mode) {
             case WAVE -> "Wave";
             case ORANGE_MONEY -> "Orange Money";
-            case FREE_MONEY -> "Free Money";
+            case FREE_MONEY -> "Mixx by Yas";
             case VIREMENT -> "Virement";
             case ESPECES -> "Espèces";
         };

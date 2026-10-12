@@ -1,6 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
+<%@ taglib prefix="fn" uri="jakarta.tags.functions" %>
 <c:set var="pageTitle" value="Historique des connexions"/>
 <c:set var="activeMenu" value="connexions"/>
 <c:set var="ctx" value="${pageContext.request.contextPath}"/>
@@ -49,7 +50,7 @@
                             <th>Date / Heure</th>
                             <th>Membre</th>
                             <th>Email</th>
-                            <th>Rôle</th>
+                            <th>Canal</th>
                             <th>IP</th>
                             <th>Navigateur (User-Agent)</th>
                         </tr>
@@ -58,18 +59,17 @@
                         <c:forEach var="c" items="${connexions}">
                             <tr>
                                 <td>
-                                    <fmt:parseDate value="${c.dateConnexion}" pattern="yyyy-MM-dd'T'HH:mm:ss" var="dt" type="both"/>
-                                    <fmt:formatDate value="${dt}" pattern="dd/MM/yyyy HH:mm:ss"/>
+                                    ${c.dateAffichee}
                                 </td>
-                                <td>${c.membre.prenom} ${c.membre.nom}</td>
-                                <td>${c.membre.email}</td>
+                                <td>${c.compte.prenom} ${c.compte.nom}</td>
+                                <td>${c.compte.email}</td>
                                 <td>
                                     <c:choose>
-                                        <c:when test="${c.membre.role == 'ADMIN'}">
-                                            <span class="badge bg-danger">ADMIN</span>
+                                        <c:when test="${fn:startsWith(c.userAgent, 'Cotisen')}">
+                                            <span class="badge bg-primary">Application</span>
                                         </c:when>
                                         <c:otherwise>
-                                            <span class="badge bg-secondary">MEMBRE</span>
+                                            <span class="badge bg-secondary">Site web</span>
                                         </c:otherwise>
                                     </c:choose>
                                 </td>

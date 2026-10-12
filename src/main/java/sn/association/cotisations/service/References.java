@@ -3,6 +3,7 @@ package sn.association.cotisations.service;
 import sn.association.cotisations.entity.Amende;
 import sn.association.cotisations.entity.Cotisation;
 import sn.association.cotisations.entity.Membre;
+import sn.association.cotisations.entity.PaiementAbonnement;
 
 /** Numéros lisibles affichés sur les reçus et dans l'application. */
 public final class References {
@@ -21,7 +22,12 @@ public final class References {
         return String.format("AMD-%d-%05d", annee, a.getId());
     }
 
-    /** « M-0003 » */
+    /** « ABO-2026-00003 » */
+    public static String abonnement(PaiementAbonnement p) {
+        return String.format("ABO-%d-%05d", p.getDatePaiement().getYear(), p.getId());
+    }
+
+        /** « M-0003 » */
     public static String numero(Membre m) {
         return String.format("M-%04d", m.getNumero());
     }

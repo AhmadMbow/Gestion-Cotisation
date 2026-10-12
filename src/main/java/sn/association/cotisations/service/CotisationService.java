@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import sn.association.cotisations.dao.CotisationDAO;
 import sn.association.cotisations.dao.MembreDAO;
 import sn.association.cotisations.entity.Cotisation;
+import sn.association.cotisations.entity.Groupe;
 import sn.association.cotisations.entity.Membre;
 import sn.association.cotisations.entity.ModePaiement;
 import sn.association.cotisations.entity.StatutCotisation;
@@ -35,9 +36,14 @@ public class CotisationService {
         return cotisationDAO.findByMembre(numero);
     }
 
+    /** Retardataires du groupe historique (interface web). */
     public List<Membre> membresEnRetardCeMois() {
+        return membresEnRetardCeMois(Groupe.HISTORIQUE);
+    }
+
+    public List<Membre> membresEnRetardCeMois(int groupe) {
         LocalDate now = LocalDate.now();
-        return membreDAO.findEnRetardPourMois(now.getMonthValue(), now.getYear());
+        return membreDAO.findEnRetardPourMois(groupe, now.getMonthValue(), now.getYear());
     }
 
     /**
@@ -106,14 +112,14 @@ public class CotisationService {
     }
 
     /**
-     * Montant total dû par un membre = (nombre de mois dus) × montant standard.
+     * Montant total dû par un membre = (nombre de mois dus) × montant de son groupe.
      */
     public BigDecimal montantTotalDu(Membre m) {
         int n = moisDusParMembre(m).size();
-        return parametreService.montantCotisation().multiply(BigDecimal.valueOf(n));
+        return m.getGroupe().getMontantCotisation().multiply(BigDecimal.valueOf(n));
     }
 
-    /** Montant standard de la cotisation, configurable par l'admin (anciennement MONTANT_PAR_DEFAUT). */
+    /** Montant standard de la cotisation du groupe historique (interface web). */
     public BigDecimal montantParDefaut() {
         return parametreService.montantCotisation();
     }

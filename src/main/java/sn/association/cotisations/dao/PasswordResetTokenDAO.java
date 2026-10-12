@@ -32,7 +32,7 @@ public class PasswordResetTokenDAO {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return Optional.of(em.createQuery(
-                            "SELECT t FROM PasswordResetToken t JOIN FETCH t.membre WHERE t.token = :tok",
+                            "SELECT t FROM PasswordResetToken t JOIN FETCH t.compte WHERE t.token = :tok",
                             PasswordResetToken.class)
                     .setParameter("tok", token)
                     .getSingleResult());

@@ -15,10 +15,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sn.association.cotisations.entity.Compte;
 import sn.association.cotisations.entity.Membre;
 import sn.association.cotisations.entity.ModePaiement;
+import sn.association.cotisations.service.LimiteForfaitException;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
@@ -30,14 +33,17 @@ import java.util.Map;
  * Base des servlets de l'API JSON : lecture du corps, réponses, gestion des erreurs.
  *
  * Les erreurs métier des services sont traduites en codes HTTP :
- * IllegalArgumentException → 400, IllegalStateException → 409.
+ * IllegalArgumentException → 400, IllegalStateException → 409,
+ * LimiteForfaitException → 402 (l'application propose alors un forfait supérieur).
  */
 public abstract class ApiServlet extends HttpServlet {
 
     private static final Logger log = LoggerFactory.getLogger(ApiServlet.class);
     static final Jsonb JSONB = JsonbBuilder.create();
 
-    /** Attribut de requête posé par {@link ApiAuthFilter}. */
+    /** Attributs de requête posés par {@link ApiAuthFilter} : le compte connecté, et son
+     *  adhésion au groupe demandé dans l'en-tête {@code X-Groupe} (absente sans groupe). */
+    public static final String COMPTE = "api.compte";
     public static final String UTILISATEUR = "api.utilisateur";
     public static final String JETON = "api.jeton";
 
@@ -60,6 +66,9 @@ public abstract class ApiServlet extends HttpServlet {
             }
         } catch (ApiException e) {
             erreur(resp, e.getStatus(), e.getMessage());
+        } catch (LimiteForfaitException e) {
+            ecrire(resp, 402, Map.of("erreur", e.getMessage(),
+                    "forfaitConseille", e.getForfaitConseille().name()));
         } catch (IllegalArgumentException | JsonParsingException | DateTimeParseException | ClassCastException e) {
             erreur(resp, HttpServletResponse.SC_BAD_REQUEST, message(e, "Requête invalide."));
         } catch (IllegalStateException e) {
@@ -72,12 +81,16 @@ public abstract class ApiServlet extends HttpServlet {
     }
 
     static void erreur(HttpServletResponse resp, int status, String message) throws IOException {
+        ecrire(resp, status, Map.of("erreur", message));
+    }
+
+    private static void ecrire(HttpServletResponse resp, int status, Map<String, String> corps) throws IOException {
         if (resp.isCommitted()) return;
         resp.resetBuffer();
         resp.setStatus(status);
         resp.setCharacterEncoding("UTF-8");
         resp.setContentType("application/json");
-        JSONB.toJson(Map.of("erreur", message), resp.getWriter());
+        JSONB.toJson(corps, resp.getWriter());
     }
 
     private static String message(Exception e, String defaut) {
@@ -95,6 +108,11 @@ public abstract class ApiServlet extends HttpServlet {
     // Lecture de la requête
     // ------------------------------------------------------------------
 
+    protected static Compte compte(HttpServletRequest req) {
+        return (Compte) req.getAttribute(COMPTE);
+    }
+
+    /** Adhésion au groupe en cours (garantie par le filtre sur les routes qui l'exigent). */
     protected static Membre utilisateur(HttpServletRequest req) {
         return (Membre) req.getAttribute(UTILISATEUR);
     }
@@ -135,6 +153,16 @@ public abstract class ApiServlet extends HttpServlet {
             return Integer.parseInt(s);
         } catch (NumberFormatException e) {
             throw new ApiException(HttpServletResponse.SC_NOT_FOUND, "Ressource introuvable.");
+        }
+    }
+
+    protected static BigDecimal montant(JsonObject o, String cle) {
+        String v = texte(o, cle);
+        if (v == null || v.isBlank()) return null;
+        try {
+            return new BigDecimal(v.trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Montant invalide.");
         }
     }
 

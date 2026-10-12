@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import sn.association.cotisations.entity.Membre;
 import sn.association.cotisations.entity.Role;
 import sn.association.cotisations.service.MembreService;
+import sn.association.cotisations.service.ServicesDeTest;
 import sn.association.cotisations.util.JPAUtil;
 
 import java.time.LocalDate;
@@ -24,7 +25,7 @@ class MembreServiceIntegrationTest {
     @BeforeAll
     static void setupAll() {
         JPAUtil.setUnitName("testPU");
-        service = new MembreService();
+        service = new ServicesDeTest().membres;
     }
 
     @AfterAll

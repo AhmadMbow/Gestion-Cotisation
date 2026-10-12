@@ -3,32 +3,25 @@ package sn.association.cotisations.service;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import sn.association.cotisations.dao.MembreDAO;
+import sn.association.cotisations.entity.Groupe;
 import sn.association.cotisations.entity.Membre;
 import sn.association.cotisations.entity.StatutMembre;
-import sn.association.cotisations.util.PasswordUtil;
 
 import java.util.Optional;
 
 @ApplicationScoped
 public class AuthService {
 
+    @Inject CompteService compteService;
     @Inject MembreDAO membreDAO;
 
     /**
-     * Authentifie un membre par email + mot de passe.
-     * Retourne le Membre uniquement si l'email existe, le mot de passe correspond
-     * et le compte est ACTIF.
+     * Connexion au site web, réservé au groupe historique : le compte doit être correct
+     * et membre ACTIF de ce groupe.
      */
     public Optional<Membre> authenticate(String email, String motDePasse) {
-        if (email == null || motDePasse == null) return Optional.empty();
-
-        Optional<Membre> opt = membreDAO.findByEmail(email.trim().toLowerCase());
-        if (opt.isEmpty()) return Optional.empty();
-
-        Membre m = opt.get();
-        if (m.getStatut() != StatutMembre.ACTIF) return Optional.empty();
-        if (!PasswordUtil.matches(motDePasse, m.getMotDePasse())) return Optional.empty();
-
-        return Optional.of(m);
+        return compteService.authentifier(email, motDePasse)
+                .flatMap(c -> membreDAO.findByCompteEtGroupe(c.getId(), Groupe.HISTORIQUE))
+                .filter(m -> m.getStatut() == StatutMembre.ACTIF);
     }
 }

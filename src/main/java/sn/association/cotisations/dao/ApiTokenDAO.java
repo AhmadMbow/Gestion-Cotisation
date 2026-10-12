@@ -32,7 +32,7 @@ public class ApiTokenDAO {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             List<ApiToken> r = em.createQuery(
-                    "SELECT t FROM ApiToken t JOIN FETCH t.membre WHERE t.tokenHash = :h", ApiToken.class)
+                    "SELECT t FROM ApiToken t JOIN FETCH t.compte WHERE t.tokenHash = :h", ApiToken.class)
                     .setParameter("h", tokenHash)
                     .setMaxResults(1)
                     .getResultList();
@@ -46,9 +46,9 @@ public class ApiTokenDAO {
         executeUpdate("DELETE FROM ApiToken t WHERE t.tokenHash = :h", "h", tokenHash);
     }
 
-    /** Déconnecte tous les appareils d'un membre (désactivation, nouveau mot de passe…). */
-    public void deleteByMembre(Integer membreNumero) {
-        executeUpdate("DELETE FROM ApiToken t WHERE t.membre.numero = :n", "n", membreNumero);
+    /** Déconnecte tous les appareils d'un compte (nouveau mot de passe…). */
+    public void deleteByCompte(Integer compteId) {
+        executeUpdate("DELETE FROM ApiToken t WHERE t.compte.id = :n", "n", compteId);
     }
 
     public void deleteExpired() {

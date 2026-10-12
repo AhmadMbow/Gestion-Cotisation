@@ -10,24 +10,31 @@ import sn.association.cotisations.dao.ConnexionDAO;
 import sn.association.cotisations.dao.CotisationDAO;
 import sn.association.cotisations.dao.MembreDAO;
 import sn.association.cotisations.dao.NotificationDAO;
+import sn.association.cotisations.entity.Compte;
+import sn.association.cotisations.entity.Forfait;
 import sn.association.cotisations.entity.Membre;
 import sn.association.cotisations.entity.Role;
+import sn.association.cotisations.entity.StatutMembre;
+import sn.association.cotisations.service.AbonnementService;
+import sn.association.cotisations.service.CompteService;
 import sn.association.cotisations.service.PaiementService;
-import sn.association.cotisations.service.ParametreService;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 /**
- * GET  /api/donnees                  → toutes les données visibles par l'utilisateur
- *                                      (tout pour un admin, ses propres données pour un membre)
+ * GET  /api/donnees                  → compte, forfait, groupes, et les données du groupe
+ *                                      demandé dans l'en-tête X-Groupe (tout pour un admin,
+ *                                      ses propres données pour un membre)
+ * PUT  /api/compte                   {prenom, nom, email, telephone, dateNaissance} → son profil
  * POST /api/paiements                {periodes, amendes, mode} → paiement du membre connecté
  * POST /api/notifications/lues
  * GET  /api/sante                    → {"ok": true} (sans authentification)
  */
 @WebServlet(name = "CompteApiServlet",
-        urlPatterns = {"/api/donnees", "/api/paiements", "/api/notifications/lues", "/api/sante"})
+        urlPatterns = {"/api/donnees", "/api/compte", "/api/paiements", "/api/notifications/lues", "/api/sante"})
 public class CompteApiServlet extends ApiServlet {
 
     @Inject MembreDAO membreDAO;
@@ -35,15 +42,28 @@ public class CompteApiServlet extends ApiServlet {
     @Inject AmendeDAO amendeDAO;
     @Inject NotificationDAO notificationDAO;
     @Inject ConnexionDAO connexionDAO;
-    @Inject ParametreService parametreService;
     @Inject PaiementService paiementService;
+    @Inject CompteService compteService;
+    @Inject AbonnementService abonnementService;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         run(req, resp, (rq, rs) -> switch (rq.getServletPath()) {
             case "/api/sante" -> Map.of("ok", true);
-            case "/api/donnees" -> donnees(utilisateur(rq));
+            case "/api/donnees" -> donnees(compte(rq), utilisateur(rq));
             default -> throw new ApiException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Méthode non autorisée.");
+        });
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        run(req, resp, (rq, rs) -> {
+            exiger(rq.getServletPath().equals("/api/compte"), HttpServletResponse.SC_METHOD_NOT_ALLOWED,
+                    "Méthode non autorisée.");
+            JsonObject b = corps(rq);
+            Compte c = compteService.modifierProfil(compte(rq).getId(), texte(b, "prenom"), texte(b, "nom"),
+                    texte(b, "email"), texte(b, "telephone"), date(b, "dateNaissance"));
+            return Dto.of(c);
         });
     }
 
@@ -59,7 +79,11 @@ public class CompteApiServlet extends ApiServlet {
                     return resultat(r);
                 }
                 case "/api/notifications/lues":
-                    notificationDAO.marquerLues(u.getRole() == Role.ADMIN ? null : u.getNumero());
+                    if (u.getRole() == Role.ADMIN) {
+                        notificationDAO.marquerLuesPourAdmins(u.getGroupe().getId());
+                    } else {
+                        notificationDAO.marquerLues(u.getNumero());
+                    }
                     return null;
                 default:
                     throw new ApiException(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Méthode non autorisée.");
@@ -67,25 +91,55 @@ public class CompteApiServlet extends ApiServlet {
         });
     }
 
-    Dto.Donnees donnees(Membre u) {
+    Dto.Donnees donnees(Compte c, Membre u) {
         Dto.Donnees d = new Dto.Donnees();
+        d.compte = Dto.of(c);
+        d.abonnement = abonnement(c);
+        d.forfaits = Arrays.stream(Forfait.values()).map(Dto::of).toList();
+        d.groupes = membreDAO.findByCompte(c.getId()).stream()
+                .map(m -> Dto.groupe(m, membreDAO.countActifs(m.getGroupe().getId())))
+                .toList();
+        d.connexions = connexionDAO.findByCompte(c.getId(), 15).stream().map(Dto::of).toList();
+
+        if (u == null || u.getStatut() != StatutMembre.ACTIF) {
+            d.membres = List.of();
+            d.cotisations = List.of();
+            d.amendes = List.of();
+            d.notifications = List.of();
+            return d;
+        }
+        int g = u.getGroupe().getId();
+        d.groupe = Dto.groupe(u, membreDAO.countActifs(g));
         d.utilisateur = Dto.of(u);
         d.parametres = new Dto.ParametresDto();
-        d.parametres.montantCotisation = parametreService.montantCotisation().longValue();
-        d.parametres.montantAmende = parametreService.montantAmende().longValue();
+        d.parametres.montantCotisation = u.getGroupe().getMontantCotisation().longValue();
+        d.parametres.montantAmende = u.getGroupe().getMontantAmende().longValue();
         if (u.getRole() == Role.ADMIN) {
-            d.membres = membreDAO.findAll().stream().map(Dto::of).toList();
-            d.cotisations = cotisationDAO.findAll().stream().map(Dto::of).toList();
-            d.amendes = amendeDAO.findAll().stream().map(Dto::of).toList();
-            d.notifications = notificationDAO.findPourAdmins().stream().map(Dto::of).toList();
+            d.membres = membreDAO.findByGroupe(g).stream().map(Dto::of).toList();
+            d.cotisations = cotisationDAO.findByGroupe(g).stream().map(Dto::of).toList();
+            d.amendes = amendeDAO.findByGroupe(g).stream().map(Dto::of).toList();
+            d.notifications = notificationDAO.findPourAdmins(g).stream().map(Dto::of).toList();
         } else {
-            d.membres = List.of(d.utilisateur);
+            // Les autres membres actifs, sans leurs coordonnées (avatars de l'accueil).
+            d.membres = membreDAO.findByGroupe(g).stream()
+                    .filter(m -> m.getStatut() == StatutMembre.ACTIF || m.equals(u))
+                    .map(m -> m.equals(u) ? d.utilisateur : Dto.apercu(m))
+                    .toList();
             d.cotisations = cotisationDAO.findByMembre(u.getNumero()).stream().map(Dto::of).toList();
             d.amendes = amendeDAO.findByMembre(u.getNumero()).stream().map(Dto::of).toList();
             d.notifications = notificationDAO.findByMembre(u.getNumero()).stream().map(Dto::of).toList();
         }
-        d.connexions = connexionDAO.findByMembre(u.getNumero(), 15).stream().map(Dto::of).toList();
         return d;
+    }
+
+    Dto.AbonnementDto abonnement(Compte c) {
+        Dto.AbonnementDto a = new Dto.AbonnementDto();
+        Forfait f = c.forfaitEffectif();
+        a.forfait = f.name();
+        a.expireLe = f == Forfait.GRATUIT ? null : c.getForfaitExpireLe();
+        a.groupesCrees = abonnementService.groupesCrees(c);
+        a.paiements = abonnementService.historique(c).stream().map(Dto::of).toList();
+        return a;
     }
 
     static Dto.PaiementResultat resultat(PaiementService.Resultat r) {

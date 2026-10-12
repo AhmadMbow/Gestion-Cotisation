@@ -10,7 +10,7 @@ import java.util.Objects;
 
 /**
  * Notification affichée dans l'application (cloche).
- * Sans membre, elle est destinée aux administrateurs.
+ * Sans membre, elle est destinée aux administrateurs du groupe.
  */
 @Entity
 @Table(name = "notification",
@@ -28,6 +28,12 @@ public class Notification implements Serializable {
     @JoinColumn(name = "membre_numero")
     @OnDelete(action = OnDeleteAction.CASCADE)
     private Membre membre;
+
+    /** Groupe concerné (fil des administrateurs quand il n'y a pas de membre). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "groupe_id")
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Groupe groupe;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
@@ -48,7 +54,8 @@ public class Notification implements Serializable {
     public Notification() {
     }
 
-    public Notification(Membre membre, Type type, String titre, String message) {
+    public Notification(Groupe groupe, Membre membre, Type type, String titre, String message) {
+        this.groupe = groupe;
         this.membre = membre;
         this.type = type;
         this.titre = titre;
@@ -61,6 +68,9 @@ public class Notification implements Serializable {
 
     public Membre getMembre() { return membre; }
     public void setMembre(Membre membre) { this.membre = membre; }
+
+    public Groupe getGroupe() { return groupe; }
+    public void setGroupe(Groupe groupe) { this.groupe = groupe; }
 
     public Type getType() { return type; }
     public void setType(Type type) { this.type = type; }

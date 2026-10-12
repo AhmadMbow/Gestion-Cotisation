@@ -9,6 +9,7 @@ import sn.association.cotisations.entity.ModePaiement;
 import sn.association.cotisations.entity.Role;
 import sn.association.cotisations.service.CotisationService;
 import sn.association.cotisations.service.MembreService;
+import sn.association.cotisations.service.ServicesDeTest;
 import sn.association.cotisations.util.JPAUtil;
 
 import java.math.BigDecimal;
@@ -30,8 +31,9 @@ class CotisationServiceIntegrationTest {
     @BeforeAll
     static void setupAll() {
         JPAUtil.setUnitName("testPU");
-        membreService = new MembreService();
-        cotisationService = new CotisationService();
+        ServicesDeTest services = new ServicesDeTest();
+        membreService = services.membres;
+        cotisationService = services.cotisations;
     }
 
     @AfterAll

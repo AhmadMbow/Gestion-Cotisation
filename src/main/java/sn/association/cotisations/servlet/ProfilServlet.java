@@ -7,7 +7,9 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import sn.association.cotisations.dao.CompteDAO;
 import sn.association.cotisations.dao.MembreDAO;
+import sn.association.cotisations.entity.Compte;
 import sn.association.cotisations.entity.Membre;
 import sn.association.cotisations.entity.Role;
 import sn.association.cotisations.util.FlashUtil;
@@ -26,6 +28,7 @@ import java.util.Optional;
 public class ProfilServlet extends HttpServlet {
 
     @Inject MembreDAO membreDAO;
+    @Inject CompteDAO compteDAO;
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
@@ -73,8 +76,8 @@ public class ProfilServlet extends HttpServlet {
         email = email.toLowerCase();
         if (!email.equals(m.getEmail())) {
             // Unicité de l'email
-            Optional<Membre> autre = membreDAO.findByEmail(email);
-            if (autre.isPresent() && !autre.get().getNumero().equals(m.getNumero())) {
+            Optional<Compte> autre = compteDAO.findByEmail(email);
+            if (autre.isPresent() && !autre.get().getId().equals(m.getCompte().getId())) {
                 FlashUtil.error(req, "Cet email est déjà utilisé par un autre membre.");
                 return;
             }

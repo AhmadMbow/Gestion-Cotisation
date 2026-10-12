@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import sn.association.cotisations.entity.Amende;
+import sn.association.cotisations.entity.Groupe;
 import sn.association.cotisations.service.AmendeService;
 import sn.association.cotisations.service.MembreService;
 import sn.association.cotisations.util.FlashUtil;
@@ -80,6 +81,8 @@ public class AdminAmendesServlet extends HttpServlet {
                 throw new IllegalArgumentException("Tous les champs sont obligatoires.");
             }
             Integer membreNumero = Integer.valueOf(membreParam);
+            membreService.trouver(membreNumero).filter(m -> m.appartientAuGroupe(Groupe.HISTORIQUE))
+                    .orElseThrow(() -> new IllegalArgumentException("Membre introuvable."));
             BigDecimal montant = new BigDecimal(montantParam);
 
             Amende a = amendeService.generer(membreNumero, montant);
@@ -88,7 +91,7 @@ public class AdminAmendesServlet extends HttpServlet {
                     + a.getMembre().getPrenom() + " " + a.getMembre().getNom() + ".");
             resp.sendRedirect(req.getContextPath() + "/admin/amendes");
 
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             req.setAttribute("erreur", e.getMessage());
             req.setAttribute("membres", membreService.listerTous());
             req.setAttribute("montantStandard", parametreService.montantAmende());
@@ -111,7 +114,7 @@ public class AdminAmendesServlet extends HttpServlet {
     private void marquerPayee(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
             Integer id = Integer.valueOf(req.getParameter("id"));
-            sn.association.cotisations.entity.Membre membre = amendeService.trouver(id).getMembre();
+            sn.association.cotisations.entity.Membre membre = amendeDuSite(id).getMembre();
             Amende a = amendeService.marquerPayee(id);
             notificationService.paiement(membre, java.util.List.of(), java.util.List.of(a),
                     sn.association.cotisations.entity.ModePaiement.ESPECES, true);
@@ -124,9 +127,19 @@ public class AdminAmendesServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/admin/amendes");
     }
 
+    /** Amende d'un membre du groupe historique (le seul que gère le site). */
+    private Amende amendeDuSite(Integer id) {
+        Amende a = amendeService.trouver(id);
+        if (!a.getMembre().appartientAuGroupe(Groupe.HISTORIQUE)) {
+            throw new IllegalArgumentException("Amende introuvable.");
+        }
+        return a;
+    }
+
     private void supprimer(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
             Integer id = Integer.valueOf(req.getParameter("id"));
+            amendeDuSite(id);
             amendeService.supprimer(id);
             FlashUtil.success(req, "Amende N°" + id + " supprimée.");
         } catch (IllegalArgumentException | NullPointerException e) {

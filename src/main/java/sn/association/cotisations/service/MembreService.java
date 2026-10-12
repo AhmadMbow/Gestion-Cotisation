@@ -3,21 +3,32 @@ package sn.association.cotisations.service;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import sn.association.cotisations.dao.MembreDAO;
+import sn.association.cotisations.entity.Compte;
+import sn.association.cotisations.entity.Groupe;
 import sn.association.cotisations.entity.Membre;
 import sn.association.cotisations.entity.Role;
 import sn.association.cotisations.entity.StatutMembre;
 import sn.association.cotisations.util.PasswordUtil;
 
-import java.security.SecureRandom;
 import java.time.LocalDate;
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Membres (adhésions) d'un groupe. Les variantes sans groupe servent l'interface web,
+ * qui gère le groupe historique.
+ */
 @ApplicationScoped
 public class MembreService {
 
     @Inject MembreDAO membreDAO = new MembreDAO();
+    @Inject CompteService compteService;
+    @Inject GroupeService groupeService;
+    @Inject ParametreService parametreService;
+
+    /** Résultat d'un ajout : le membre, et si son compte vient d'être créé (e-mail de bienvenue). */
+    public record Ajout(Membre membre, boolean compteCree) {
+    }
 
     public List<Membre> listerTous() {
         return membreDAO.findAll();
@@ -27,91 +38,68 @@ public class MembreService {
         return membreDAO.findById(numero);
     }
 
-    /**
-     * Crée un nouveau membre. Lève IllegalArgumentException si l'email existe déjà
-     * ou si un champ obligatoire est manquant.
-     */
+    /** Formulaire web : ajout au groupe historique, mot de passe obligatoire. */
     public Membre creer(String prenom, String nom, String email, LocalDate dateNaissance,
                         Role role, String motDePasseClair) {
-        valider(prenom, nom, email, motDePasseClair); // le formulaire web exige un mot de passe
-        return creer(prenom, nom, email, null, dateNaissance, null, role, motDePasseClair);
+        CompteService.valider(prenom, nom, email, motDePasseClair);
+        return ajouter(parametreService.get(), prenom, nom, email, null, dateNaissance, null, role,
+                motDePasseClair).membre();
     }
 
     /**
-     * Variante complète (application mobile). Si le mot de passe est vide, un mot de passe
-     * aléatoire est attribué : le membre choisira le sien via l'e-mail de bienvenue.
+     * Ajoute une personne au groupe. Si un compte existe déjà avec cet e-mail, il est simplement
+     * rattaché au groupe (son identité n'est pas modifiée) ; sinon le compte est créé.
      * Sans date d'adhésion, c'est la date du jour.
      */
-    public Membre creer(String prenom, String nom, String email, String telephone,
-                        LocalDate dateNaissance, LocalDate dateAdhesion, Role role,
-                        String motDePasseClair) {
-        boolean motDePasseFourni = motDePasseClair != null && !motDePasseClair.isBlank();
-        if (!motDePasseFourni) motDePasseClair = motDePasseAleatoire();
-        valider(prenom, nom, email, motDePasseClair);
-
-        String emailNorm = email.trim().toLowerCase();
-        if (membreDAO.findByEmail(emailNorm).isPresent()) {
-            throw new IllegalArgumentException("Un membre avec cet email existe déjà.");
+    public Ajout ajouter(Groupe g, String prenom, String nom, String email, String telephone,
+                         LocalDate dateNaissance, LocalDate dateAdhesion, Role role, String motDePasseClair) {
+        if (email == null || email.isBlank()) throw new IllegalArgumentException("L'email est obligatoire.");
+        Optional<Compte> existant = compteService.parEmail(email);
+        if (existant.isPresent()
+                && membreDAO.findByCompteEtGroupe(existant.get().getId(), g.getId()).isPresent()) {
+            throw new IllegalArgumentException("Cette personne fait déjà partie du groupe.");
         }
-
-        Membre m = new Membre();
-        m.setPrenom(prenom.trim());
-        m.setNom(nom.trim());
-        m.setEmail(emailNorm);
-        m.setTelephone(nettoyer(telephone));
-        m.setDateNaissance(dateNaissance);
-        m.setDateAdhesion(dateAdhesion != null ? dateAdhesion : LocalDate.now());
-        m.setStatut(StatutMembre.ACTIF);
-        m.setRole(role != null ? role : Role.MEMBRE);
-        m.setMotDePasse(PasswordUtil.hash(motDePasseClair));
-        return membreDAO.save(m);
+        groupeService.verifierPlace(g);
+        Compte c = existant.orElseGet(() ->
+                compteService.creer(prenom, nom, email, telephone, dateNaissance, motDePasseClair));
+        Membre m = new Membre(c, g, role != null ? role : Role.MEMBRE,
+                dateAdhesion != null ? dateAdhesion : LocalDate.now());
+        return new Ajout(membreDAO.save(m), existant.isEmpty());
     }
 
     /**
-     * Met à jour un membre existant. Le mot de passe n'est changé que s'il est non-vide.
+     * Formulaire web : modification complète (identité comprise) d'un membre du groupe historique.
+     * Le mot de passe n'est changé que s'il est non vide.
      */
     public Membre modifier(Integer numero, String prenom, String nom, String email,
                            LocalDate dateNaissance, Role role, String nouveauMotDePasse) {
         Membre m = membreDAO.findById(numero)
                 .orElseThrow(() -> new IllegalArgumentException("Membre introuvable."));
-        return modifier(numero, prenom, nom, email, m.getTelephone(), dateNaissance,
-                m.getDateAdhesion(), role, nouveauMotDePasse);
+        compteService.modifierProfil(m.getCompte().getId(), prenom, nom, email, m.getTelephone(), dateNaissance);
+        if (nouveauMotDePasse != null && !nouveauMotDePasse.isBlank()) {
+            if (nouveauMotDePasse.length() < 6) {
+                throw new IllegalArgumentException("Le mot de passe doit faire au moins 6 caractères.");
+            }
+            Compte c = compteService.trouver(m.getCompte().getId()).orElseThrow();
+            c.setMotDePasse(PasswordUtil.hash(nouveauMotDePasse));
+            compteService.enregistrer(c);
+        }
+        return modifierAdhesion(numero, role, null);
     }
 
     /**
-     * Variante complète (application mobile) : téléphone et date d'adhésion en plus.
+     * Ce qu'un administrateur de groupe peut changer : le rôle et la date d'adhésion.
+     * L'identité appartient au compte de la personne.
      */
-    public Membre modifier(Integer numero, String prenom, String nom, String email, String telephone,
-                           LocalDate dateNaissance, LocalDate dateAdhesion, Role role,
-                           String nouveauMotDePasse) {
+    public Membre modifierAdhesion(Integer numero, Role role, LocalDate dateAdhesion) {
         Membre m = membreDAO.findById(numero)
                 .orElseThrow(() -> new IllegalArgumentException("Membre introuvable."));
-
-        if (prenom == null || prenom.isBlank()) throw new IllegalArgumentException("Le prénom est obligatoire.");
-        if (nom == null || nom.isBlank()) throw new IllegalArgumentException("Le nom est obligatoire.");
-        if (email == null || email.isBlank()) throw new IllegalArgumentException("L'email est obligatoire.");
-
-        String emailNorm = email.trim().toLowerCase();
-        if (!emailNorm.equals(m.getEmail())) {
-            // L'email a changé — vérifier l'unicité
-            if (membreDAO.findByEmail(emailNorm).isPresent()) {
-                throw new IllegalArgumentException("Un autre membre utilise déjà cet email.");
-            }
-        }
-
-        m.setPrenom(prenom.trim());
-        m.setNom(nom.trim());
-        m.setEmail(emailNorm);
-        m.setTelephone(nettoyer(telephone));
-        m.setDateNaissance(dateNaissance);
-        if (dateAdhesion != null) m.setDateAdhesion(dateAdhesion);
         if (role != null) m.setRole(role);
-        if (nouveauMotDePasse != null && !nouveauMotDePasse.isBlank()) {
-            m.setMotDePasse(PasswordUtil.hash(nouveauMotDePasse));
-        }
+        if (dateAdhesion != null) m.setDateAdhesion(dateAdhesion);
         return membreDAO.save(m);
     }
 
+    /** Retire la personne du groupe (son compte et ses autres groupes ne changent pas). */
     public void supprimer(Integer numero) {
         membreDAO.delete(numero);
     }
@@ -119,27 +107,8 @@ public class MembreService {
     public Membre basculerStatut(Integer numero) {
         Membre m = membreDAO.findById(numero)
                 .orElseThrow(() -> new IllegalArgumentException("Membre introuvable."));
+        if (m.getStatut() == StatutMembre.INACTIF) groupeService.verifierPlace(m.getGroupe());
         m.setStatut(m.getStatut() == StatutMembre.ACTIF ? StatutMembre.INACTIF : StatutMembre.ACTIF);
         return membreDAO.save(m);
-    }
-
-    private static String nettoyer(String v) {
-        return (v == null || v.isBlank()) ? null : v.trim();
-    }
-
-    private static String motDePasseAleatoire() {
-        byte[] bytes = new byte[18];
-        new SecureRandom().nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-    }
-
-    private void valider(String prenom, String nom, String email, String motDePasse) {
-        if (prenom == null || prenom.isBlank()) throw new IllegalArgumentException("Le prénom est obligatoire.");
-        if (nom == null || nom.isBlank()) throw new IllegalArgumentException("Le nom est obligatoire.");
-        if (email == null || email.isBlank()) throw new IllegalArgumentException("L'email est obligatoire.");
-        if (!email.contains("@") || email.length() < 5) throw new IllegalArgumentException("Email invalide.");
-        if (motDePasse == null || motDePasse.length() < 6) {
-            throw new IllegalArgumentException("Le mot de passe doit faire au moins 6 caractères.");
-        }
     }
 }

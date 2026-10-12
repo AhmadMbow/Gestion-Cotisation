@@ -22,10 +22,10 @@ public class ApiToken implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "membre_numero", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "compte_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private Membre membre;
+    private Compte compte;
 
     @Column(name = "token_hash", nullable = false, length = 64, unique = true)
     private String tokenHash;
@@ -42,8 +42,8 @@ public class ApiToken implements Serializable {
     public ApiToken() {
     }
 
-    public ApiToken(Membre membre, String tokenHash, LocalDateTime expireAt, String appareil) {
-        this.membre = membre;
+    public ApiToken(Compte compte, String tokenHash, LocalDateTime expireAt, String appareil) {
+        this.compte = compte;
         this.tokenHash = tokenHash;
         this.createdAt = LocalDateTime.now();
         this.expireAt = expireAt;
@@ -57,8 +57,8 @@ public class ApiToken implements Serializable {
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
-    public Membre getMembre() { return membre; }
-    public void setMembre(Membre membre) { this.membre = membre; }
+    public Compte getCompte() { return compte; }
+    public void setCompte(Compte compte) { this.compte = compte; }
 
     public String getTokenHash() { return tokenHash; }
     public void setTokenHash(String tokenHash) { this.tokenHash = tokenHash; }

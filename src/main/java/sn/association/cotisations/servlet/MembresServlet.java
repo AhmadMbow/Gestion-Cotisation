@@ -6,6 +6,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import sn.association.cotisations.entity.Groupe;
 import sn.association.cotisations.entity.Membre;
 import sn.association.cotisations.entity.Role;
 import sn.association.cotisations.service.MembreService;
@@ -57,7 +58,7 @@ public class MembresServlet extends HttpServlet {
 
             case "/admin/membres/edit":
                 Integer id = parseId(req);
-                if (id == null) { redirectListeAvecErreur(req, resp, "ID manquant."); return; }
+                if (id == null) { redirectListeAvecErreur(req, resp, "Membre introuvable."); return; }
                 Optional<Membre> opt = membreService.trouver(id);
                 if (opt.isEmpty()) { redirectListeAvecErreur(req, resp, "Membre introuvable."); return; }
                 req.setAttribute("membre", opt.get());
@@ -93,12 +94,12 @@ public class MembresServlet extends HttpServlet {
                     parseDate(req.getParameter("dateNaissance")),
                     parseRole(req.getParameter("role")),
                     req.getParameter("motDePasse"));
-            notificationService.bienvenue(m, passwordResetService.creerLien(m,
+            notificationService.bienvenue(m, passwordResetService.creerLien(m.getCompte(),
                     sn.association.cotisations.service.PasswordResetService.TTL_BIENVENUE,
                     sn.association.cotisations.service.PasswordResetService.baseUrl(req)));
             FlashUtil.success(req, "Membre " + m.getPrenom() + " " + m.getNom() + " ajouté avec succès.");
             resp.sendRedirect(req.getContextPath() + "/admin/membres");
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             req.setAttribute("erreur", e.getMessage());
             req.setAttribute("modeEdition", false);
             // Repopulate form values
@@ -113,7 +114,7 @@ public class MembresServlet extends HttpServlet {
 
     private void modifier(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         Integer id = parseId(req);
-        if (id == null) { redirectListeAvecErreur(req, resp, "ID manquant."); return; }
+        if (id == null) { redirectListeAvecErreur(req, resp, "Membre introuvable."); return; }
         try {
             Membre m = membreService.modifier(
                     id,
@@ -125,7 +126,7 @@ public class MembresServlet extends HttpServlet {
                     req.getParameter("motDePasse"));
             FlashUtil.success(req, "Membre " + m.getPrenom() + " " + m.getNom() + " modifié avec succès.");
             resp.sendRedirect(req.getContextPath() + "/admin/membres");
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             req.setAttribute("erreur", e.getMessage());
             req.setAttribute("modeEdition", true);
             Optional<Membre> opt = membreService.trouver(id);
@@ -136,7 +137,7 @@ public class MembresServlet extends HttpServlet {
 
     private void supprimer(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         Integer id = parseId(req);
-        if (id == null) { redirectListeAvecErreur(req, resp, "ID manquant."); return; }
+        if (id == null) { redirectListeAvecErreur(req, resp, "Membre introuvable."); return; }
         try {
             membreService.supprimer(id);
             FlashUtil.success(req, "Membre supprimé.");
@@ -148,11 +149,11 @@ public class MembresServlet extends HttpServlet {
 
     private void basculerStatut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         Integer id = parseId(req);
-        if (id == null) { redirectListeAvecErreur(req, resp, "ID manquant."); return; }
+        if (id == null) { redirectListeAvecErreur(req, resp, "Membre introuvable."); return; }
         try {
             Membre m = membreService.basculerStatut(id);
             FlashUtil.success(req, m.getPrenom() + " " + m.getNom() + " est maintenant " + m.getStatut() + ".");
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             FlashUtil.error(req, e.getMessage());
         }
         resp.sendRedirect(req.getContextPath() + "/admin/membres");
@@ -163,9 +164,13 @@ public class MembresServlet extends HttpServlet {
         resp.sendRedirect(req.getContextPath() + "/admin/membres");
     }
 
+    /** Identifiant d'un membre du groupe historique (le seul que gère le site), sinon null. */
     private Integer parseId(HttpServletRequest req) {
-        try { return Integer.valueOf(req.getParameter("id")); }
+        Integer id;
+        try { id = Integer.valueOf(req.getParameter("id")); }
         catch (Exception e) { return null; }
+        return membreService.trouver(id).filter(m -> m.appartientAuGroupe(Groupe.HISTORIQUE)).isPresent()
+                ? id : null;
     }
 
     private LocalDate parseDate(String s) {

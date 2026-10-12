@@ -3,6 +3,7 @@ package sn.association.cotisations.dao;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 import sn.association.cotisations.entity.Amende;
+import sn.association.cotisations.entity.Groupe;
 import sn.association.cotisations.entity.StatutAmende;
 import sn.association.cotisations.util.JPAUtil;
 
@@ -15,13 +16,19 @@ import java.util.Optional;
 @ApplicationScoped
 public class AmendeDAO {
 
+    /** Amendes du groupe historique (interface web). */
     public List<Amende> findAll() {
+        return findByGroupe(Groupe.HISTORIQUE);
+    }
+
+    public List<Amende> findByGroupe(int groupe) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.createQuery(
-                    "SELECT a FROM Amende a JOIN FETCH a.membre " +
+                    "SELECT a FROM Amende a JOIN FETCH a.membre m WHERE m.groupe.id = :g " +
                     "ORDER BY a.statutPaiement, a.dateGeneration DESC, a.id DESC",
                     Amende.class)
+                    .setParameter("g", groupe)
                     .getResultList();
         } finally {
             em.close();
@@ -97,8 +104,10 @@ public class AmendeDAO {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.createQuery(
-                    "SELECT COUNT(a) FROM Amende a WHERE a.statutPaiement = :s", Long.class)
+                    "SELECT COUNT(a) FROM Amende a WHERE a.statutPaiement = :s AND a.membre.groupe.id = :g",
+                    Long.class)
                     .setParameter("s", StatutAmende.IMPAYEE)
+                    .setParameter("g", Groupe.HISTORIQUE)
                     .getSingleResult();
         } finally {
             em.close();

@@ -17,10 +17,10 @@ public class PasswordResetToken implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "membre_numero", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "compte_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private Membre membre;
+    private Compte compte;
 
     @Column(nullable = false, length = 80, unique = true)
     private String token;
@@ -34,8 +34,8 @@ public class PasswordResetToken implements Serializable {
     public PasswordResetToken() {
     }
 
-    public PasswordResetToken(Membre membre, String token, LocalDateTime expireAt) {
-        this.membre = membre;
+    public PasswordResetToken(Compte compte, String token, LocalDateTime expireAt) {
+        this.compte = compte;
         this.token = token;
         this.expireAt = expireAt;
     }
@@ -47,8 +47,8 @@ public class PasswordResetToken implements Serializable {
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
-    public Membre getMembre() { return membre; }
-    public void setMembre(Membre membre) { this.membre = membre; }
+    public Compte getCompte() { return compte; }
+    public void setCompte(Compte compte) { this.compte = compte; }
 
     public String getToken() { return token; }
     public void setToken(String token) { this.token = token; }

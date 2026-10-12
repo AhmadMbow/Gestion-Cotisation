@@ -6,21 +6,24 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 @Entity
 @Table(name = "connexion",
-       indexes = @Index(name = "idx_connexion_membre", columnList = "membre_numero"))
+       indexes = @Index(name = "idx_connexion_compte", columnList = "compte_id"))
 public class Connexion implements Serializable {
+
+    private static final DateTimeFormatter AFFICHAGE = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "membre_numero", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "compte_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
-    private Membre membre;
+    private Compte compte;
 
     @Column(name = "date_connexion", nullable = false)
     private LocalDateTime dateConnexion;
@@ -34,8 +37,8 @@ public class Connexion implements Serializable {
     public Connexion() {
     }
 
-    public Connexion(Membre membre, LocalDateTime dateConnexion, String ip, String userAgent) {
-        this.membre = membre;
+    public Connexion(Compte compte, LocalDateTime dateConnexion, String ip, String userAgent) {
+        this.compte = compte;
         this.dateConnexion = dateConnexion;
         this.ip = ip;
         this.userAgent = userAgent;
@@ -44,8 +47,13 @@ public class Connexion implements Serializable {
     public Integer getId() { return id; }
     public void setId(Integer id) { this.id = id; }
 
-    public Membre getMembre() { return membre; }
-    public void setMembre(Membre membre) { this.membre = membre; }
+    /** Date lisible pour les pages web (« 12/10/2026 14:00:00 »). */
+    public String getDateAffichee() {
+        return dateConnexion == null ? "" : dateConnexion.format(AFFICHAGE);
+    }
+
+    public Compte getCompte() { return compte; }
+    public void setCompte(Compte compte) { this.compte = compte; }
 
     public LocalDateTime getDateConnexion() { return dateConnexion; }
     public void setDateConnexion(LocalDateTime dateConnexion) { this.dateConnexion = dateConnexion; }

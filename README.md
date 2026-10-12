@@ -79,9 +79,11 @@ Produit `target/gestion-cotisations.war`.
 L'application est ensuite accessible sur : `http://localhost:8080/gestion-cotisations/`
 
 ### 5. Comptes de démo (mot de passe : `admin123`)
+Groupe « Association Cotisen » (n° 1, code d'invitation `ASSO26`) :
+
 | Email             | Rôle    |
 |-------------------|---------|
-| admin@asso.sn     | ADMIN   |
+| admin@asso.sn     | ADMIN (propriétaire, forfait Illimité) |
 | aminata@asso.sn   | MEMBRE  |
 | moussa@asso.sn    | MEMBRE  |
 
@@ -135,17 +137,38 @@ Avec Docker, recopier `.env.example` en `.env` (jamais commité) : `docker compo
 
 ## API de l'application mobile
 
-L'application Flutter **Cotisen** utilise l'API JSON `/api/*` (authentification par jeton `Authorization: Bearer …`, valable 30 jours) :
+L'application Flutter **Cotisen** utilise l'API JSON `/api/*` (authentification par jeton `Authorization: Bearer …`, valable 30 jours).
+
+### Modèle multi-groupes (SaaS)
+
+- Un **compte** (e-mail + mot de passe) peut être **membre de plusieurs groupes** ; l'adhésion (`membre`) porte le rôle, le statut et la date d'adhésion dans chaque groupe.
+- Chaque **groupe** a ses montants (cotisation, amende) et un **code d'invitation** à 6 caractères.
+- Le groupe en cours est indiqué par l'en-tête **`X-Groupe: <id>`** ; `/api/admin/*` exige d'être administrateur de ce groupe.
+- Le groupe n° 1 est l'association d'origine : l'**interface web** ne gère que lui.
+- Au démarrage, une ancienne base « une seule association » est **migrée automatiquement** (`MigrationMultiGroupes`).
+
+| Forfait | Prix / mois | Groupes créés | Membres par groupe | Rapports PDF · relances e-mail |
+|---|---|---|---|---|
+| Gratuit | 0 F | 1 | 15 | non |
+| Essentiel | 1 000 F | 2 | 50 | oui |
+| Pro | 2 500 F | 5 | 200 | oui |
+| Illimité | 5 000 F | illimité | illimité | oui |
+
+Les limites suivent le forfait du **propriétaire** du groupe ; une limite atteinte renvoie **402** avec `forfaitConseille`. Le paiement de l'abonnement est **simulé** (comme les cotisations) en attendant un prestataire de paiement.
 
 | Méthode | Route | Rôle |
 |---|---|---|
-| `POST` | `/api/auth/login` | `{email, motDePasse}` → `{jeton, expireLe, utilisateur}` |
+| `POST` | `/api/auth/login` · `/api/auth/inscription` | `{email, motDePasse}` / `{prenom, nom, email, telephone, motDePasse}` → `{jeton, expireLe, compte}` |
 | `POST` | `/api/auth/logout` · `/api/auth/mot-de-passe` · `/api/auth/mot-de-passe-oublie` | Session et mot de passe |
-| `GET`  | `/api/donnees` | Tout ce que l'utilisateur peut voir (tout pour un admin) |
+| `GET`  | `/api/donnees` | Compte, forfait, groupes ; avec `X-Groupe`, les données du groupe (tout pour un admin) |
+| `PUT`  | `/api/compte` | Modifier son profil |
+| `POST` | `/api/groupes` · `/api/groupes/rejoindre` | Créer un groupe `{nom, montantCotisation, montantAmende}` · rejoindre `{code}` |
+| `POST` | `/api/abonnement` | Payer un mois de forfait `{forfait, mode}` |
 | `POST` | `/api/paiements` | Paiement du membre connecté `{periodes, amendes, mode}` |
 | `POST` | `/api/notifications/lues` | Marque les notifications comme lues |
-| `POST/PUT/DELETE` | `/api/admin/membres[/{n}[/statut\|/paiements]]` | Gestion des membres, encaissement |
+| `POST/PUT/DELETE` | `/api/admin/membres[/{n}[/statut\|/paiements]]` | Membres du groupe, encaissement |
 | `POST` | `/api/admin/amendes/generer` · `/api/admin/amendes/{id}/payer` · `/api/admin/rappels` | Amendes et rappels |
+| `PUT` · `POST` | `/api/admin/groupe` · `/api/admin/groupe/code` | Réglages du groupe · nouveau code d'invitation |
 
 Chaque paiement, amende, rappel et création de membre envoie un **e-mail HTML** et une notification dans l'application.
 

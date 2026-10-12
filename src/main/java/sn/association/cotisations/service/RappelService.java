@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.mail.MessagingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sn.association.cotisations.entity.Groupe;
 import sn.association.cotisations.entity.Membre;
 
 import java.math.BigDecimal;
@@ -25,6 +26,7 @@ public class RappelService {
     @Inject CotisationService cotisationService;
     @Inject MailService mailService;
     @Inject NotificationService notificationService;
+    @Inject ParametreService parametreService;
 
     public static class Resultat {
         public int envoyes;
@@ -36,8 +38,13 @@ public class RappelService {
      * Envoie un rappel à chaque membre en retard sur la cotisation du mois courant.
      */
     public Resultat envoyerRappelsMoisCourant() {
+        return envoyerRappelsMoisCourant(parametreService.get());
+    }
+
+    /** Rappels aux retardataires d'un groupe. */
+    public Resultat envoyerRappelsMoisCourant(Groupe groupe) {
         Resultat r = new Resultat();
-        List<Membre> retards = cotisationService.membresEnRetardCeMois();
+        List<Membre> retards = cotisationService.membresEnRetardCeMois(groupe.getId());
         r.totalEnRetard = retards.size();
 
         LocalDate now = LocalDate.now();
@@ -56,7 +63,7 @@ public class RappelService {
                     .ligne("Mois en attente", String.valueOf(nbMoisDus))
                     .total("Montant total dû", EmailTemplate.fcfa(totalDu))
                     .conclusion("Vous pouvez régulariser en quelques secondes depuis l'application Cotisen "
-                            + "(Wave, Orange Money ou Free Money). Merci !");
+                            + "(Wave, Orange Money ou Mixx by Yas). Merci !");
 
             try {
                 mailService.send(m.getEmail(), sujet, mail.texte(), mail.html());
@@ -67,7 +74,7 @@ public class RappelService {
                 r.echecs++;
             }
         }
-        notificationService.rappelsEnvoyes(r.envoyes);
+        notificationService.rappelsEnvoyes(groupe, r.envoyes);
         return r;
     }
 }

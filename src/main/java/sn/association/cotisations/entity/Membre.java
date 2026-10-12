@@ -8,8 +8,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Adhésion d'un {@link Compte} à un {@link Groupe} : rôle, statut et date d'adhésion
+ * propres au groupe. Les cotisations et amendes sont rattachées à l'adhésion.
+ *
+ * L'identité (nom, e-mail, mot de passe…) appartient au compte : les accesseurs
+ * correspondants y sont délégués, ce qui garde le code et les vues existants inchangés.
+ */
 @Entity
-@Table(name = "membre", uniqueConstraints = @UniqueConstraint(columnNames = "email"))
+@Table(name = "membre",
+       uniqueConstraints = @UniqueConstraint(name = "uk_membre_compte_groupe",
+               columnNames = {"compte_id", "groupe_id"}))
 public class Membre implements Serializable {
 
     @Id
@@ -17,21 +26,13 @@ public class Membre implements Serializable {
     @Column(name = "numero")
     private Integer numero;
 
-    @Column(nullable = false, length = 80)
-    private String prenom;
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
+    @JoinColumn(name = "compte_id")
+    private Compte compte;
 
-    @Column(nullable = false, length = 80)
-    private String nom;
-
-    @Column(nullable = false, length = 120, unique = true)
-    private String email;
-
-    /** Numéro de téléphone (facultatif) — utilisé pour le paiement mobile. */
-    @Column(length = 30)
-    private String telephone;
-
-    @Column(name = "date_naissance")
-    private LocalDate dateNaissance;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "groupe_id")
+    private Groupe groupe;
 
     @Column(name = "date_adhesion", nullable = false)
     private LocalDate dateAdhesion;
@@ -44,9 +45,6 @@ public class Membre implements Serializable {
     @Column(nullable = false, length = 10)
     private Role role = Role.MEMBRE;
 
-    @Column(name = "mot_de_passe", nullable = false, length = 255)
-    private String motDePasse;
-
     @OneToMany(mappedBy = "membre", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Cotisation> cotisations = new ArrayList<>();
 
@@ -56,23 +54,47 @@ public class Membre implements Serializable {
     public Membre() {
     }
 
+    public Membre(Compte compte, Groupe groupe, Role role, LocalDate dateAdhesion) {
+        this.compte = compte;
+        this.groupe = groupe;
+        this.role = role;
+        this.dateAdhesion = dateAdhesion;
+    }
+
     public Integer getNumero() { return numero; }
     public void setNumero(Integer numero) { this.numero = numero; }
 
-    public String getPrenom() { return prenom; }
-    public void setPrenom(String prenom) { this.prenom = prenom; }
+    public Compte getCompte() { return compte; }
+    public void setCompte(Compte compte) { this.compte = compte; }
 
-    public String getNom() { return nom; }
-    public void setNom(String nom) { this.nom = nom; }
+    public Groupe getGroupe() { return groupe; }
+    public void setGroupe(Groupe groupe) { this.groupe = groupe; }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public boolean appartientAuGroupe(int groupeId) {
+        return groupe != null && groupe.getId() != null && groupe.getId() == groupeId;
+    }
 
-    public String getTelephone() { return telephone; }
-    public void setTelephone(String telephone) { this.telephone = telephone; }
+    // --- Identité : déléguée au compte ---
 
-    public LocalDate getDateNaissance() { return dateNaissance; }
-    public void setDateNaissance(LocalDate dateNaissance) { this.dateNaissance = dateNaissance; }
+    public String getPrenom() { return compte.getPrenom(); }
+    public void setPrenom(String prenom) { compte.setPrenom(prenom); }
+
+    public String getNom() { return compte.getNom(); }
+    public void setNom(String nom) { compte.setNom(nom); }
+
+    public String getEmail() { return compte.getEmail(); }
+    public void setEmail(String email) { compte.setEmail(email); }
+
+    public String getTelephone() { return compte.getTelephone(); }
+    public void setTelephone(String telephone) { compte.setTelephone(telephone); }
+
+    public LocalDate getDateNaissance() { return compte.getDateNaissance(); }
+    public void setDateNaissance(LocalDate dateNaissance) { compte.setDateNaissance(dateNaissance); }
+
+    public String getMotDePasse() { return compte.getMotDePasse(); }
+    public void setMotDePasse(String motDePasse) { compte.setMotDePasse(motDePasse); }
+
+    // --- Adhésion ---
 
     public LocalDate getDateAdhesion() { return dateAdhesion; }
     public void setDateAdhesion(LocalDate dateAdhesion) { this.dateAdhesion = dateAdhesion; }
@@ -82,9 +104,6 @@ public class Membre implements Serializable {
 
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
-
-    public String getMotDePasse() { return motDePasse; }
-    public void setMotDePasse(String motDePasse) { this.motDePasse = motDePasse; }
 
     public List<Cotisation> getCotisations() { return cotisations; }
     public void setCotisations(List<Cotisation> cotisations) { this.cotisations = cotisations; }

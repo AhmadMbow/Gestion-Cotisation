@@ -7,9 +7,9 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import sn.association.cotisations.dao.ApiTokenDAO;
-import sn.association.cotisations.dao.MembreDAO;
+import sn.association.cotisations.dao.CompteDAO;
 import sn.association.cotisations.dao.PasswordResetTokenDAO;
-import sn.association.cotisations.entity.Membre;
+import sn.association.cotisations.entity.Compte;
 import sn.association.cotisations.entity.PasswordResetToken;
 import sn.association.cotisations.util.FlashUtil;
 import sn.association.cotisations.util.PasswordUtil;
@@ -25,7 +25,7 @@ import java.util.Optional;
 public class ResetPasswordServlet extends HttpServlet {
 
     @Inject PasswordResetTokenDAO tokenDAO;
-    @Inject MembreDAO membreDAO;
+    @Inject CompteDAO compteDAO;
     @Inject ApiTokenDAO apiTokenDAO;
 
     @Override
@@ -70,12 +70,12 @@ public class ResetPasswordServlet extends HttpServlet {
         }
 
         PasswordResetToken prt = opt.get();
-        Membre m = prt.getMembre();
-        m.setMotDePasse(PasswordUtil.hash(newPassword));
-        membreDAO.save(m);
+        Compte c = prt.getCompte();
+        c.setMotDePasse(PasswordUtil.hash(newPassword));
+        compteDAO.save(c);
         tokenDAO.markUsed(prt.getId());
         // Nouveau mot de passe : les sessions de l'application mobile sont fermées.
-        apiTokenDAO.deleteByMembre(m.getNumero());
+        apiTokenDAO.deleteByCompte(c.getId());
 
         FlashUtil.success(req, "Mot de passe modifié. Vous pouvez maintenant vous connecter.");
         resp.sendRedirect(req.getContextPath() + "/login");

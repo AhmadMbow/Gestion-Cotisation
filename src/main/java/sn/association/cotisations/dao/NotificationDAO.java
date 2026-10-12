@@ -43,13 +43,14 @@ public class NotificationDAO {
         }
     }
 
-    /** Notifications destinées aux administrateurs. */
-    public List<Notification> findPourAdmins() {
+    /** Notifications destinées aux administrateurs du groupe. */
+    public List<Notification> findPourAdmins(int groupe) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.createQuery(
-                    "SELECT n FROM Notification n WHERE n.membre IS NULL " +
+                    "SELECT n FROM Notification n WHERE n.membre IS NULL AND n.groupe.id = :g " +
                     "ORDER BY n.dateCreation DESC, n.id DESC", Notification.class)
+                    .setParameter("g", groupe)
                     .setMaxResults(LIMITE)
                     .getResultList();
         } finally {
@@ -57,19 +58,21 @@ public class NotificationDAO {
         }
     }
 
-    /** Marque comme lues les notifications d'un membre, ou celles des admins si null. */
+    /** Marque comme lues les notifications d'un membre. */
     public void marquerLues(Integer membreNumero) {
+        executer("UPDATE Notification n SET n.lue = true WHERE n.membre.numero = :p", membreNumero);
+    }
+
+    /** Marque comme lues les notifications des administrateurs du groupe. */
+    public void marquerLuesPourAdmins(int groupe) {
+        executer("UPDATE Notification n SET n.lue = true WHERE n.membre IS NULL AND n.groupe.id = :p", groupe);
+    }
+
+    private void executer(String jpql, Object param) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
             em.getTransaction().begin();
-            if (membreNumero == null) {
-                em.createQuery("UPDATE Notification n SET n.lue = true WHERE n.membre IS NULL")
-                        .executeUpdate();
-            } else {
-                em.createQuery("UPDATE Notification n SET n.lue = true WHERE n.membre.numero = :n")
-                        .setParameter("n", membreNumero)
-                        .executeUpdate();
-            }
+            em.createQuery(jpql).setParameter("p", param).executeUpdate();
             em.getTransaction().commit();
         } catch (RuntimeException e) {
             if (em.getTransaction().isActive()) em.getTransaction().rollback();

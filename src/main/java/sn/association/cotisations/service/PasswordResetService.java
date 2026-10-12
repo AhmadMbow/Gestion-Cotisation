@@ -6,11 +6,10 @@ import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sn.association.cotisations.dao.MembreDAO;
+import sn.association.cotisations.dao.CompteDAO;
 import sn.association.cotisations.dao.PasswordResetTokenDAO;
-import sn.association.cotisations.entity.Membre;
+import sn.association.cotisations.entity.Compte;
 import sn.association.cotisations.entity.PasswordResetToken;
-import sn.association.cotisations.entity.StatutMembre;
 
 import java.security.SecureRandom;
 import java.time.Duration;
@@ -33,32 +32,32 @@ public class PasswordResetService {
     public static final Duration TTL_BIENVENUE = Duration.ofDays(7);
 
     @Inject PasswordResetTokenDAO tokenDAO;
-    @Inject MembreDAO membreDAO;
+    @Inject CompteDAO compteDAO;
     @Inject MailService mailService;
 
     private final SecureRandom random = new SecureRandom();
 
     /** Crée un jeton à usage unique et renvoie le lien vers la page de choix du mot de passe. */
-    public String creerLien(Membre m, Duration ttl, String baseUrl) {
+    public String creerLien(Compte c, Duration ttl, String baseUrl) {
         byte[] bytes = new byte[32];
         random.nextBytes(bytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-        tokenDAO.save(new PasswordResetToken(m, token, LocalDateTime.now().plus(ttl)));
+        tokenDAO.save(new PasswordResetToken(c, token, LocalDateTime.now().plus(ttl)));
         return baseUrl + "/reset-password?token=" + token;
     }
 
     /**
-     * Envoie un lien de réinitialisation si l'email correspond à un compte actif.
+     * Envoie un lien de réinitialisation si l'email correspond à un compte.
      * Ne révèle jamais si le compte existe (message générique côté appelant).
      */
     public void demander(String email, String baseUrl) throws MessagingException {
         if (email == null || email.isBlank()) return;
-        Optional<Membre> opt = membreDAO.findByEmail(email.trim().toLowerCase());
-        if (opt.isEmpty() || opt.get().getStatut() != StatutMembre.ACTIF) {
-            log.info("Tentative de reset pour email inconnu ou inactif : {}", email);
+        Optional<Compte> opt = compteDAO.findByEmail(email.trim().toLowerCase());
+        if (opt.isEmpty()) {
+            log.info("Tentative de reset pour email inconnu : {}", email);
             return;
         }
-        Membre m = opt.get();
+        Compte m = opt.get();
         String lien = creerLien(m, TTL_REINITIALISATION, baseUrl);
         EmailTemplate mail = EmailTemplate.titre("Réinitialisation de votre mot de passe")
                 .intro("Bonjour " + m.getPrenom() + ",")

@@ -5,6 +5,7 @@ import jakarta.inject.Inject;
 import sn.association.cotisations.dao.AmendeDAO;
 import sn.association.cotisations.dao.MembreDAO;
 import sn.association.cotisations.entity.Amende;
+import sn.association.cotisations.entity.Groupe;
 import sn.association.cotisations.entity.Membre;
 import sn.association.cotisations.entity.ModePaiement;
 import sn.association.cotisations.entity.StatutAmende;
@@ -70,18 +71,23 @@ public class AmendeService {
      * (pour pouvoir prévenir les membres concernés).
      */
     public List<Amende> genererAmendesMoisCourant() {
+        return genererAmendesMoisCourant(parametreService.get());
+    }
+
+    /** Amendes du mois pour les retardataires d'un groupe, au montant fixé par ce groupe. */
+    public List<Amende> genererAmendesMoisCourant(Groupe groupe) {
         LocalDate now = LocalDate.now();
         int mois = now.getMonthValue();
         int annee = now.getYear();
 
-        List<Membre> enRetard = cotisationService.membresEnRetardCeMois();
+        List<Membre> enRetard = cotisationService.membresEnRetardCeMois(groupe.getId());
         List<Amende> creees = new ArrayList<>();
         for (Membre m : enRetard) {
             if (amendeDAO.existsAmendePourMois(m.getNumero(), mois, annee)) continue;
 
             Amende a = new Amende();
             a.setMembre(m);
-            a.setMontant(parametreService.montantAmende());
+            a.setMontant(groupe.getMontantAmende());
             a.setDateGeneration(now);
             a.setStatutPaiement(StatutAmende.IMPAYEE);
             creees.add(amendeDAO.save(a));

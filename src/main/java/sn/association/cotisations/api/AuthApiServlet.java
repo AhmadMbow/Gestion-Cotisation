@@ -9,11 +9,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sn.association.cotisations.dao.ConnexionDAO;
-import sn.association.cotisations.dao.MembreDAO;
+import sn.association.cotisations.entity.Compte;
 import sn.association.cotisations.entity.Connexion;
-import sn.association.cotisations.entity.Membre;
 import sn.association.cotisations.service.ApiTokenService;
-import sn.association.cotisations.service.AuthService;
+import sn.association.cotisations.service.CompteService;
 import sn.association.cotisations.service.PasswordResetService;
 import sn.association.cotisations.util.LoginRateLimiter;
 import sn.association.cotisations.util.PasswordUtil;
@@ -24,7 +23,8 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * POST /api/auth/login               {email, motDePasse} → {jeton, expireLe, utilisateur}
+ * POST /api/auth/login               {email, motDePasse} → {jeton, expireLe, compte}
+ * POST /api/auth/inscription         {prenom, nom, email, telephone, motDePasse} → idem (forfait gratuit)
  * POST /api/auth/logout              (jeton révoqué)
  * POST /api/auth/mot-de-passe        {actuel, nouveau}
  * POST /api/auth/mot-de-passe-oublie {email} → lien envoyé par email
@@ -34,12 +34,11 @@ public class AuthApiServlet extends ApiServlet {
 
     private static final Logger log = LoggerFactory.getLogger(AuthApiServlet.class);
 
-    @Inject AuthService authService;
+    @Inject CompteService compteService;
     @Inject ApiTokenService apiTokenService;
     @Inject PasswordResetService passwordResetService;
     @Inject LoginRateLimiter rateLimiter;
     @Inject ConnexionDAO connexionDAO;
-    @Inject MembreDAO membreDAO;
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -48,6 +47,7 @@ public class AuthApiServlet extends ApiServlet {
             String action = p.isEmpty() ? "" : p.get(0);
             return switch (action) {
                 case "login" -> login(rq);
+                case "inscription" -> inscription(rq);
                 case "logout" -> {
                     apiTokenService.revoquer((String) rq.getAttribute(JETON));
                     yield null;
@@ -67,15 +67,35 @@ public class AuthApiServlet extends ApiServlet {
         }
         JsonObject body = corps(req);
         String email = texte(body, "email");
-        Optional<Membre> opt = authService.authenticate(email, texte(body, "motDePasse"));
+        Optional<Compte> opt = compteService.authentifier(email, texte(body, "motDePasse"));
         if (opt.isEmpty()) {
             rateLimiter.recordFailure(ip);
             log.warn("Échec d'authentification API pour {} depuis {}", email, ip);
             throw new ApiException(HttpServletResponse.SC_UNAUTHORIZED, "E-mail ou mot de passe incorrect.");
         }
         rateLimiter.recordSuccess(ip);
+        return session(req, opt.get());
+    }
 
-        Membre m = opt.get();
+    private Dto.Session inscription(HttpServletRequest req) throws IOException {
+        String ip = ip(req);
+        if (rateLimiter.isBlocked(ip)) {
+            throw new ApiException(429, "Trop de tentatives. Réessayez dans quelques minutes.");
+        }
+        JsonObject b = corps(req);
+        try {
+            Compte c = compteService.inscrire(texte(b, "prenom"), texte(b, "nom"), texte(b, "email"),
+                    texte(b, "telephone"), texte(b, "motDePasse"));
+            return session(req, c);
+        } catch (IllegalArgumentException e) {
+            rateLimiter.recordFailure(ip); // freine les essais d'e-mails en série
+            throw e;
+        }
+    }
+
+    /** Connexion réussie : historique + jeton. */
+    private Dto.Session session(HttpServletRequest req, Compte m) {
+        String ip = ip(req);
         String ua = req.getHeader("User-Agent");
         if (ua != null && ua.length() > 255) ua = ua.substring(0, 255);
         try {
@@ -87,12 +107,12 @@ public class AuthApiServlet extends ApiServlet {
         Dto.Session s = new Dto.Session();
         s.jeton = apiTokenService.emettre(m, ua);
         s.expireLe = LocalDateTime.now().plus(ApiTokenService.VALIDITE);
-        s.utilisateur = Dto.of(m);
+        s.compte = Dto.of(m);
         return s;
     }
 
     private Object changerMotDePasse(HttpServletRequest req) throws IOException {
-        Membre m = utilisateur(req);
+        Compte m = compte(req);
         JsonObject body = corps(req);
         String actuel = texte(body, "actuel");
         String nouveau = texte(body, "nouveau");
@@ -103,7 +123,7 @@ public class AuthApiServlet extends ApiServlet {
             throw new IllegalArgumentException("Le nouveau mot de passe doit faire au moins 6 caractères.");
         }
         m.setMotDePasse(PasswordUtil.hash(nouveau));
-        membreDAO.save(m);
+        compteService.enregistrer(m);
         return null;
     }
 

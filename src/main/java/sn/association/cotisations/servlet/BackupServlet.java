@@ -11,6 +11,7 @@ import sn.association.cotisations.dao.ConnexionDAO;
 import sn.association.cotisations.dao.CotisationDAO;
 import sn.association.cotisations.dao.MembreDAO;
 import sn.association.cotisations.entity.Amende;
+import sn.association.cotisations.entity.Compte;
 import sn.association.cotisations.entity.Connexion;
 import sn.association.cotisations.entity.Cotisation;
 import sn.association.cotisations.entity.Membre;
@@ -23,8 +24,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * Génère une sauvegarde SQL complète (INSERTs) de la base, téléchargeable.
- * GET /admin/backup → application/sql en attachment.
+ * Sauvegarde SQL des données du groupe historique (comptes, membres, cotisations,
+ * amendes, connexions), téléchargeable. GET /admin/backup → application/sql en attachment.
+ *
+ * La base est partagée avec les autres groupes : la restauration utilise INSERT IGNORE
+ * (elle remet ce qui manque) et ne vide jamais de table.
  */
 @WebServlet(name = "BackupServlet", urlPatterns = {"/admin/backup"})
 public class BackupServlet extends HttpServlet {
@@ -51,7 +55,9 @@ public class BackupServlet extends HttpServlet {
             w.println("SET NAMES utf8mb4;");
             w.println();
 
-            dumpMembres(w, membreDAO.findAll());
+            List<Membre> membres = membreDAO.findAll();
+            dumpComptes(w, membres);
+            dumpMembres(w, membres);
             dumpCotisations(w, cotisationDAO.findAll());
             dumpAmendes(w, amendeDAO.findAll());
             dumpConnexions(w, connexionDAO.findAll());
@@ -61,28 +67,38 @@ public class BackupServlet extends HttpServlet {
         }
     }
 
+    private void dumpComptes(PrintWriter w, List<Membre> list) {
+        w.println("-- ---------- Comptes (" + list.size() + ") ----------");
+        for (Membre m : list) {
+            Compte c = m.getCompte();
+            w.printf(
+                "INSERT IGNORE INTO compte (id, prenom, nom, email, telephone, date_naissance, mot_de_passe, "
+              + "date_creation, forfait, forfait_expire_le) VALUES (%d, %s, %s, %s, %s, %s, %s, %s, %s, %s);%n",
+                c.getId(),
+                sql(c.getPrenom()), sql(c.getNom()), sql(c.getEmail()), sql(c.getTelephone()),
+                sql(c.getDateNaissance()), sql(c.getMotDePasse()), sql(c.getDateCreation()),
+                sql(c.getForfait().name()), sql(c.getForfaitExpireLe()));
+        }
+        w.println();
+    }
+
     private void dumpMembres(PrintWriter w, List<Membre> list) {
         w.println("-- ---------- Membres (" + list.size() + ") ----------");
-        w.println("TRUNCATE TABLE membre;");
         for (Membre m : list) {
             w.printf(
-                "INSERT INTO membre (numero, prenom, nom, email, date_naissance, date_adhesion, statut, role, mot_de_passe) "
-              + "VALUES (%d, %s, %s, %s, %s, %s, %s, %s, %s);%n",
-                m.getNumero(),
-                sql(m.getPrenom()), sql(m.getNom()), sql(m.getEmail()),
-                sql(m.getDateNaissance()), sql(m.getDateAdhesion()),
-                sql(m.getStatut().name()), sql(m.getRole().name()),
-                sql(m.getMotDePasse()));
+                "INSERT IGNORE INTO membre (numero, compte_id, groupe_id, date_adhesion, statut, role) "
+              + "VALUES (%d, %d, %d, %s, %s, %s);%n",
+                m.getNumero(), m.getCompte().getId(), m.getGroupe().getId(),
+                sql(m.getDateAdhesion()), sql(m.getStatut().name()), sql(m.getRole().name()));
         }
         w.println();
     }
 
     private void dumpCotisations(PrintWriter w, List<Cotisation> list) {
         w.println("-- ---------- Cotisations (" + list.size() + ") ----------");
-        w.println("TRUNCATE TABLE cotisation;");
         for (Cotisation c : list) {
             w.printf(
-                "INSERT INTO cotisation (id, membre_numero, montant, date_paiement, mois, annee, mode_paiement, statut) "
+                "INSERT IGNORE INTO cotisation (id, membre_numero, montant, date_paiement, mois, annee, mode_paiement, statut) "
               + "VALUES (%d, %d, %s, %s, %d, %d, %s, %s);%n",
                 c.getId(),
                 c.getMembre().getNumero(),
@@ -97,10 +113,9 @@ public class BackupServlet extends HttpServlet {
 
     private void dumpAmendes(PrintWriter w, List<Amende> list) {
         w.println("-- ---------- Amendes (" + list.size() + ") ----------");
-        w.println("TRUNCATE TABLE amende;");
         for (Amende a : list) {
             w.printf(
-                "INSERT INTO amende (id, membre_numero, montant, date_generation, statut_paiement) "
+                "INSERT IGNORE INTO amende (id, membre_numero, montant, date_generation, statut_paiement) "
               + "VALUES (%d, %d, %s, %s, %s);%n",
                 a.getId(),
                 a.getMembre().getNumero(),
@@ -113,13 +128,12 @@ public class BackupServlet extends HttpServlet {
 
     private void dumpConnexions(PrintWriter w, List<Connexion> list) {
         w.println("-- ---------- Connexions (" + list.size() + ") ----------");
-        w.println("TRUNCATE TABLE connexion;");
         for (Connexion c : list) {
             w.printf(
-                "INSERT INTO connexion (id, membre_numero, date_connexion, ip, user_agent) "
+                "INSERT IGNORE INTO connexion (id, compte_id, date_connexion, ip, user_agent) "
               + "VALUES (%d, %d, %s, %s, %s);%n",
                 c.getId(),
-                c.getMembre().getNumero(),
+                c.getCompte().getId(),
                 sql(c.getDateConnexion()),
                 sql(c.getIp()),
                 sql(c.getUserAgent()));

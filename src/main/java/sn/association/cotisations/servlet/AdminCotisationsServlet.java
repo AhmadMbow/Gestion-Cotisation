@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import sn.association.cotisations.entity.Cotisation;
+import sn.association.cotisations.entity.Groupe;
 import sn.association.cotisations.entity.ModePaiement;
 import sn.association.cotisations.service.CotisationService;
 import sn.association.cotisations.service.MembreService;
@@ -98,6 +99,8 @@ public class AdminCotisationsServlet extends HttpServlet {
                 throw new IllegalArgumentException("Tous les champs sont obligatoires.");
             }
             Integer membreNumero = Integer.valueOf(membreParam);
+            membreService.trouver(membreNumero).filter(m -> m.appartientAuGroupe(Groupe.HISTORIQUE))
+                    .orElseThrow(() -> new IllegalArgumentException("Membre introuvable."));
             BigDecimal montant = new BigDecimal(montantParam);
             int mois = Integer.parseInt(moisParam);
             int annee = Integer.parseInt(anneeParam);

@@ -89,7 +89,7 @@ public class LoginServlet extends HttpServlet {
         try {
             String ua = req.getHeader("User-Agent");
             if (ua != null && ua.length() > 255) ua = ua.substring(0, 255);
-            connexionDAO.save(new Connexion(m, LocalDateTime.now(), req.getRemoteAddr(), ua));
+            connexionDAO.save(new Connexion(m.getCompte(), LocalDateTime.now(), req.getRemoteAddr(), ua));
         } catch (RuntimeException e) {
             log.warn("Impossible d'enregistrer la connexion de {} : {}", m.getEmail(), e.getMessage());
         }
