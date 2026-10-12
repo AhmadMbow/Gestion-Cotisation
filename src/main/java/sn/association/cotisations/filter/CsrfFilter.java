@@ -26,8 +26,9 @@ public class CsrfFilter implements Filter {
 
         // L'API mobile s'authentifie par jeton « Bearer » (pas de cookie de session) :
         // elle n'est pas exposée au CSRF et ne doit pas créer de session.
+        // Idem pour les fichiers statiques de l'application web (/app/).
         String path = req.getRequestURI().substring(req.getContextPath().length());
-        if (path.startsWith("/api/")) {
+        if (path.startsWith("/api/") || path.equals("/app") || path.startsWith("/app/")) {
             chain.doFilter(request, response);
             return;
         }
